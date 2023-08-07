@@ -1,0 +1,16 @@
+{
+    "Logging": {
+        "LogLevel": {
+            "Default": "Debug",
+            "System": "Warning",
+            "Microsoft": "Warning"
+        },
+        "Console": {
+            "LogLevel": {
+                "Default": "Debug",
+                "System": "Warning",
+                "Microsoft": "Warning"
+            }
+        }
+    }
+}

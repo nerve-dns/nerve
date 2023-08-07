@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Dns\Dns.csproj" />
+    <ProjectReference Include="..\Dns.Resolver\Dns.Resolver.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Nerve.Dns.Server</RootNamespace>
+  </PropertyGroup>
+</Project>
