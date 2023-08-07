@@ -8,9 +8,14 @@ namespace Nerve.Dns.Client;
 
 public class UdpDnsClient : IDnsClient
 {
+    private readonly IIpEndPointProvider ipEndPointProvider;
     private readonly Random random;
 
-    public IPEndPoint ServerEndPoint { get; }
+    public UdpDnsClient(IIpEndPointProvider ipEndPointProvider)
+    {
+        this.ipEndPointProvider = ipEndPointProvider;
+        this.random = new Random();
+    }
 
     public UdpDnsClient(IPAddress ipAddress)
         : this(new IPEndPoint(ipAddress, 53))
@@ -19,9 +24,15 @@ public class UdpDnsClient : IDnsClient
     }
 
     public UdpDnsClient(IPEndPoint serverEndPoint)
+        : this(new SingleIpEndPointProvider(serverEndPoint))
     {
-        this.ServerEndPoint = serverEndPoint;
-        this.random = new Random();
+
+    }
+
+    public UdpDnsClient(params IPEndPoint[] ipEndPoints)
+        : this(new RoundRobinIpEndPointProvider(ipEndPoints))
+    {
+
     }
 
     public Task<DnsResponse> ResolveAsync(Question question, CancellationToken cancellationToken = default)
@@ -45,6 +56,8 @@ public class UdpDnsClient : IDnsClient
             AdditionalCount = 0,
             AuthorityCount = 0
         };
+
+        IPEndPoint iPEndPoint = ipEndPointProvider.Get();
 
         return Task.FromResult(new DnsResponse
         {
