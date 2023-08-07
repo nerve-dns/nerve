@@ -2,12 +2,14 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using System.Buffers.Binary;
+
 namespace Nerve.Dns;
 
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
 /// </summary>
-public sealed class Flags
+public sealed class Flags : INetworkSerializable
 {
     public bool QueryResponse
     {
@@ -118,6 +120,18 @@ public sealed class Flags
     }
 
     private ushort flags;
+
+    public void Serialize(Span<byte> bytes, ref ushort index)
+    {
+        BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), this.flags);
+        index += 2;
+    }
+
+    public void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
+    {
+        this.flags = BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(offset, 2));
+        offset += 2;
+    }
 
     private bool Equals(Flags other)
         => this.flags == other.flags;
