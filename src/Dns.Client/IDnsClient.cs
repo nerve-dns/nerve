@@ -6,5 +6,5 @@ namespace Nerve.Dns.Client;
 
 public interface IDnsClient
 {
-    Task<DnsResponse> ResolveAsync(Question question, CancellationToken cancellationToken = default);
+    Task<Message> ResolveAsync(Question question, CancellationToken cancellationToken = default);
 }
