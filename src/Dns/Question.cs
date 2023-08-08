@@ -32,15 +32,13 @@ public class Question : INetworkSerializable
     public void Serialize(Span<byte> bytes, ref ushort index)
     {
         this.Name.Serialize(bytes, ref index);
-        BinaryPrimitives.WriteUInt16BigEndian(bytes[index..2], (ushort)this.Type);
-        index += 2;
-        BinaryPrimitives.WriteUInt16BigEndian(bytes[index..2], (ushort)this.Class);
-        index += 2;
+        BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), (ushort)this.Type);
+        BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index + 2, 2), (ushort)this.Class);
+        index += 4;
     }
 
     public void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
     {
-        this.Name = new DomainName();
         this.Name.Deserialize(bytes, ref offset);
         this.Type = (Type)BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(offset, 2));
         this.Class = (Class)BinaryPrimitives.ReadUInt16BigEndian(bytes.Slice(offset + 2, 2));
