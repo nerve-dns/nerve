@@ -52,18 +52,30 @@ public sealed class ResourceRecord : INetworkSerializable
         {
             case Class.In when this.Type == Type.A:
             {
+                var aResourceData = new AResourceData();
+                aResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = aResourceData;
                 break;
             }
             case Class.In when this.Type == Type.Aaaa:
             {
+                var aaaaResourceData = new AaaaResourceData();
+                aaaaResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = aaaaResourceData;
                 break;
             }
             case Class.In when this.Type == Type.Ns:
             {
+                var nsResourceData = new NsResourceData();
+                nsResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = nsResourceData;
                 break;
             }
             case Class.In when this.Type == Type.CName:
             {
+                var cNameResourceData = new CNameResourceData();
+                cNameResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = cNameResourceData;
                 break;
             }
             default:
