@@ -1,6 +1,8 @@
 # nerve
 
-nerve is an ad blocking DNS server with high performance and user friendliness in mind from the start.
+[![Build and Test](https://github.com/nerve-dns/nerve/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/nerve-dns/nerve/actions/workflows/dotnet.yml)
+
+nerve is a modern ad blocking DNS server with high performance and simplicity in mind from the start.
 
 It's a minimal implementation for now of the DNS specification ([RFC-1035](https://datatracker.ietf.org/doc/html/rfc1035)).
 
