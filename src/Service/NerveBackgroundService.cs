@@ -2,20 +2,24 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using Nerve.Dns.Server;
+
 namespace Nerve.Service;
 
 public class NerveBackgroundService : BackgroundService
 {
     private readonly ILogger<NerveBackgroundService> logger;
+    private readonly IDnsServer dnsServer;
 
-    public NerveBackgroundService(ILogger<NerveBackgroundService> logger)
+    public NerveBackgroundService(ILogger<NerveBackgroundService> logger, IDnsServer dnsServer)
     {
         this.logger = logger;
+        this.dnsServer = dnsServer;
     }
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        logger.LogInformation("Nerve background service started");
-        return Task.CompletedTask;
+        this.logger.LogInformation("Nerve background service started");
+        await this.dnsServer.StartAsync(cancellationToken);
     }
 }

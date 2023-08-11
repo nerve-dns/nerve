@@ -2,7 +2,7 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using Nerve.Service;
+using Nerve.Service.Extensions;
 using Nerve.Service.Web;
 
 IConfiguration configuration = new ConfigurationBuilder()
@@ -18,7 +18,7 @@ using IHost host = new HostBuilder()
     })
     .ConfigureServices((hostContext, services) =>
     {
-        services.AddHostedService<NerveBackgroundService>();
+        services.AddNerve();
     })
     .ConfigureWebHost(webConfig =>
     {
