@@ -18,6 +18,19 @@ public class DomainNameTests
     };
 
     [Fact]
+    public void Separator_ReturnsDot()
+    {
+        // Arrange
+        const char expectedSeparator = '.';
+        
+        // Act
+        const char actualSeparator = DomainName.Separator;
+        
+        // Assert
+        actualSeparator.Should().Be(expectedSeparator);
+    }
+
+    [Fact]
     public void Equals_TwoInstancesWithSameDomain_ReturnsTrue()
     {
         // Arrange
@@ -56,6 +69,19 @@ public class DomainNameTests
         
         // Assert
         text.Should().Be("www.example-domain.com");
+    }
+
+    [Fact]
+    public void ToString_ValidDomainNameWithStartLabelIndex_ReturnsCorrectString()
+    {
+        // Arrange
+        var domainName = new DomainName("www.example-domain.com");
+        
+        // Act
+        string text = domainName.ToString(startLabelIndex: 1);
+        
+        // Assert
+        text.Should().Be("example-domain.com");
     }
 
     [Fact]
