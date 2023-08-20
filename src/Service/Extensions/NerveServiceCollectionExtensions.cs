@@ -12,12 +12,9 @@ namespace Nerve.Service.Extensions;
 
 public static class NerveServiceCollectionExtensions
 {
-    public static IServiceCollection AddNerve(this IServiceCollection @this)
+    public static IServiceCollection AddNerve(this IServiceCollection @this, IConfiguration configuration)
     {
-        @this.AddSingleton(serviceProvider =>
-        {
-            return new DnsClientResolver(new UdpDnsClient(IPAddress.Parse("1.1.1.1")));
-        });
+        @this.Configure<NerveOptions>(configuration.GetSection("Nerve"));
         @this.AddSingleton<IDnsServer>(
             serviceProvider =>
             {

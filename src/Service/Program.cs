@@ -18,7 +18,7 @@ using IHost host = new HostBuilder()
     })
     .ConfigureServices((hostContext, services) =>
     {
-        services.AddNerve();
+        services.AddNerve(configuration);
     })
     .ConfigureWebHost(webConfig =>
     {

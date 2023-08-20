@@ -1,4 +1,17 @@
 {
+    "Nerve": {
+        "ip": "0.0.0.0",
+        "port": 5333,
+        "forwarders": [
+            "1.1.1.1"
+        ],
+        "blocklists": [
+            {
+                "ip": "0.0.0.0",
+                "lists": []
+            }
+        ]
+    },
     "Logging": {
         "LogLevel": {
             "Default": "Debug",
