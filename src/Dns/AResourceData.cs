@@ -11,6 +11,8 @@ namespace Nerve.Dns;
 /// </summary>
 public sealed class AResourceData : ResourceData
 {
+    private const ushort Length = 4;
+
     /// <summary>
     /// A 32 bit IPv4 Internet address.
     /// </summary>
@@ -20,14 +22,14 @@ public sealed class AResourceData : ResourceData
 
     public override void Serialize(Span<byte> bytes, ref ushort index)
     {
-        this.Address.TryWriteBytes(bytes.Slice(index, this.Length), out int written);
+        this.Address.TryWriteBytes(bytes.Slice(index, Length), out int written);
         index += (ushort)written;
     }
 
     public override void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
     {
-        this.Address = new IPAddress(bytes.Slice(offset, this.Length));
-        offset += this.Length;
+        this.Address = new IPAddress(bytes.Slice(offset, Length));
+        offset += Length;
     }
 
     private bool Equals(AResourceData other)

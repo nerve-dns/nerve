@@ -26,7 +26,6 @@ public class AResourceDataTests
         aResourceData.Serialize(bytes, ref index);
 
         // Assert
-        aResourceData.Length.Should().Be(ByteLength);
         index.Should().Be(ByteLength);
         bytes.Should().BeEquivalentTo(new byte[] { 10, 1, 2, 3 });
     }
@@ -43,7 +42,6 @@ public class AResourceDataTests
         aResourceData.Deserialize(bytes, ref offset);
 
         // Assert
-        aResourceData.Length.Should().Be(ByteLength);
         offset.Should().Be(ByteLength);
         aResourceData.Address.Should().Be(IPAddress.Parse("10.0.0.1"));
     }

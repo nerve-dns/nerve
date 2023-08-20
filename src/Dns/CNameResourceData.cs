@@ -14,7 +14,7 @@ public class CNameResourceData : ResourceData
     /// </summary>
     public DomainName Name { get; set; } = new();
 
-    public override ushort Length => (ushort)(this.Name.ToString().Length + 1);
+
 
     public override void Serialize(Span<byte> bytes, ref ushort index)
         => this.Name.Serialize(bytes, ref index);

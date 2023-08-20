@@ -6,7 +6,6 @@ namespace Nerve.Dns;
 
 public abstract class ResourceData : INetworkSerializable
 {
-    public abstract ushort Length { get; }
     
     public abstract void Serialize(Span<byte> bytes, ref ushort index);
 

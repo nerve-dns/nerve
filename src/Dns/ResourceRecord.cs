@@ -28,9 +28,14 @@ public sealed class ResourceRecord : INetworkSerializable
 
         if (this.ResourceData is not null)
         {
-            BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), this.ResourceData.Length);
+            ushort resourceDataLengthOffset = index;
             index += 2;
-            this.ResourceData.Serialize(bytes, ref index);
+
+            ushort beforeResourceDataOffset = index;
+            this.ResourceData.Serialize(bytes, ref index, domainNameOffsetCache);
+            
+            ushort resourceDataLength = (ushort)(index - beforeResourceDataOffset);
+            BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(resourceDataLengthOffset, 2), resourceDataLength);
         }
         else
         {
