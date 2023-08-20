@@ -23,7 +23,7 @@ public class AaaaResourceDataTests
         };
 
         // Act
-        aaaaResourceData.Serialize(bytes, ref offset);
+        aaaaResourceData.Serialize(bytes, ref offset, new Dictionary<string, ushort>());
 
         // Assert
         offset.Should().Be(ByteLength);

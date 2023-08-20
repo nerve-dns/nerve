@@ -38,11 +38,11 @@ public class Header : INetworkSerializable
         set => this.Flags.ResponseCode = value;
     }
     
-    public void Serialize(Span<byte> bytes, ref ushort index)
+    public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), this.Id);
         index += 2;
-        this.Flags.Serialize(bytes, ref index);
+        this.Flags.Serialize(bytes, ref index, domainNameOffsetCache);
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), this.QuestionCount);
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index + 2, 2), this.AnswerCount);
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index + 4, 2), this.AuthorityCount);

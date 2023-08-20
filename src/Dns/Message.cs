@@ -14,28 +14,28 @@ public class Message : INetworkSerializable
     public List<ResourceRecord> Authorities { get; set; } = new List<ResourceRecord>();
     public List<ResourceRecord> Additionals { get; set; } = new List<ResourceRecord>();
 
-    public void Serialize(Span<byte> bytes, ref ushort index)
+    public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
-        this.Header.Serialize(bytes, ref index);
+        this.Header.Serialize(bytes, ref index, domainNameOffsetCache);
         
         foreach (Question question in this.Questions)
         {
-           question.Serialize(bytes, ref index);
+           question.Serialize(bytes, ref index, domainNameOffsetCache);
         }
         
         foreach (ResourceRecord answer in this.Answers)
         {
-            answer.Serialize(bytes, ref index);
+            answer.Serialize(bytes, ref index, domainNameOffsetCache);
         }
         
         foreach (ResourceRecord authority in this.Authorities)
         {
-            authority.Serialize(bytes, ref index);
+            authority.Serialize(bytes, ref index, domainNameOffsetCache);
         }
 
         foreach (ResourceRecord additional in this.Additionals)
         {
-            additional.Serialize(bytes, ref index);
+            additional.Serialize(bytes, ref index, domainNameOffsetCache);
         }
     }
 

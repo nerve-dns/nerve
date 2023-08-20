@@ -6,6 +6,6 @@ namespace Nerve.Dns;
 
 public interface INetworkSerializable
 {
-    void Serialize(Span<byte> bytes, ref ushort index);
+    void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache);
     void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset);
 }

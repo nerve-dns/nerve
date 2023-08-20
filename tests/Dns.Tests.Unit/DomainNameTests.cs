@@ -67,7 +67,7 @@ public class DomainNameTests
         var domainName = new DomainName("example.com");
         
         // Act
-        domainName.Serialize(buffer, ref index);
+        domainName.Serialize(buffer, ref index, new Dictionary<string, ushort>());
         
         // Assert
         index.Should().Be(13);
@@ -86,7 +86,7 @@ public class DomainNameTests
         
         // Assert
         offset.Should().Be(13);
-        domainName.Labels.Count.Should().Be(2);
+        domainName.Labels.Length.Should().Be(2);
         domainName.ToString().Should().Be("example.com");
     }
     
@@ -102,7 +102,7 @@ public class DomainNameTests
         
         // Assert
         offset.Should().Be(15);
-        domainName.Labels.Count.Should().Be(2);
+        domainName.Labels.Length.Should().Be(2);
         domainName.ToString().Should().Be("example.com");
     }
 }

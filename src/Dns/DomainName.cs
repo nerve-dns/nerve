@@ -9,7 +9,7 @@ namespace Nerve.Dns;
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.4
 ///  
-/// TODO: This is currently not a complete implementation because compression in serialize is missing among other things.
+/// TODO: This implementation is currently missing some boundary checks (eg., max 63 octets per label, as mentioned in the RFC) among other things
 /// </summary>
 public sealed class DomainName : INetworkSerializable
 {
@@ -19,9 +19,14 @@ public sealed class DomainName : INetworkSerializable
     public const byte CompressedMagicByte = 0xC0;
 
     /// <summary>
+    /// The separator used to split/join the labels of a domain name.
+    /// </summary>
+    public const char Separator = '.';
+
+    /// <summary>
     /// The labels representing the domain name.
     /// </summary>
-    public List<string> Labels { get; } = new();
+    public string[] Labels { get; private set; } = Array.Empty<string>();
 
     public DomainName()
     {
@@ -29,13 +34,25 @@ public sealed class DomainName : INetworkSerializable
 
     public DomainName(string name)
     {
-        this.Labels.AddRange(name.Split('.'));
+        this.Labels = name.Split(Separator);
     }
 
-    public void Serialize(Span<byte> bytes, ref ushort index)
+    public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
-        foreach (string label in this.Labels)
+        for (int i = 0; i < this.Labels.Length; i++)
         {
+            // Compress already serialized domain name parts (eg., reuse google.com in youtube-ui.l.google.com if serialized earlier)
+            string domainNameSlice = this.ToString(i);
+            if (domainNameOffsetCache.TryGetValue(domainNameSlice, out ushort domainNameOffset))
+            {
+                bytes[index++] = CompressedMagicByte;
+                bytes[index++] = (byte)domainNameOffset;
+                return;
+            }
+
+            domainNameOffsetCache.Add(domainNameSlice, index);
+
+            string label = this.Labels[i];
             bytes[index++] = (byte)label.Length;
             foreach (char character in label)
             {
@@ -48,10 +65,12 @@ public sealed class DomainName : INetworkSerializable
 
     public void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
     {
+        var labels = new List<string>();
         short compressedOffset = -1;
         byte labelLength;
         while ((labelLength = bytes[offset++]) != 0)
         {
+            // "Decompress" label by jumping to the offset of the previous serialized label
             if (labelLength == CompressedMagicByte)
             {
                 if (compressedOffset == -1)
@@ -66,13 +85,15 @@ public sealed class DomainName : INetworkSerializable
 
             string label = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength));
             offset += labelLength;
-            Labels.Add(label);
+            labels.Add(label);
         }
 
         if (compressedOffset != -1)
         {
             offset = (ushort)(compressedOffset + 1);
         }
+
+        this.Labels = labels.ToArray();
     }
 
     private bool Equals(DomainName other)
@@ -90,14 +111,17 @@ public sealed class DomainName : INetworkSerializable
             return true;
         }
         
-        return other.GetType() == this.GetType() && Equals((DomainName)other);
+        return other.GetType() == this.GetType() && this.Equals((DomainName)other);
     }
 
     public override int GetHashCode()
         => this.Labels.GetHashCode();
 
     public override string ToString()
-        => string.Join('.', this.Labels);
+        => this.ToString(startLabelIndex: 0);
+
+    public string ToString(int startLabelIndex)
+        => string.Join(Separator, this.Labels, startLabelIndex, this.Labels.Length - startLabelIndex);
 
     public static implicit operator string(DomainName domainName)
         => domainName.ToString();

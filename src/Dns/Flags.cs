@@ -121,7 +121,7 @@ public sealed class Flags : INetworkSerializable
 
     private ushort flags;
 
-    public void Serialize(Span<byte> bytes, ref ushort index)
+    public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), this.flags);
         index += 2;

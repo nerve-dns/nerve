@@ -23,7 +23,7 @@ public class AResourceDataTests
         };
 
         // Act
-        aResourceData.Serialize(bytes, ref index);
+        aResourceData.Serialize(bytes, ref index, new Dictionary<string, ushort>());
 
         // Assert
         index.Should().Be(ByteLength);

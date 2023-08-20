@@ -6,8 +6,8 @@ namespace Nerve.Dns;
 
 public abstract class ResourceData : INetworkSerializable
 {
-    
-    public abstract void Serialize(Span<byte> bytes, ref ushort index);
+
+    public abstract void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache);
 
     public abstract void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset);
 }

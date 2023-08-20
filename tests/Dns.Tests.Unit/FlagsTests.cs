@@ -24,7 +24,7 @@ public class FlagsTests
         };
 
         // Act
-        flags.Serialize(buffer, ref index);
+        flags.Serialize(buffer, ref index, new Dictionary<string, ushort>());
         
         // Assert
         buffer.Should().BeEquivalentTo(new byte[] { 129, 3 });

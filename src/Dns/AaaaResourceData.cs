@@ -18,9 +18,7 @@ public class AaaaResourceData : ResourceData
     /// </summary>
     public IPAddress Address { get; set; } = IPAddress.IPv6Any;
 
-    public override ushort Length => 16;
-
-    public override void Serialize(Span<byte> bytes, ref ushort index)
+    public override void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
         this.Address.TryWriteBytes(bytes.Slice(index, Length), out int written);
         index += (ushort)written;

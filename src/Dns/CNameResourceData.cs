@@ -16,14 +16,11 @@ public class CNameResourceData : ResourceData
 
 
 
-    public override void Serialize(Span<byte> bytes, ref ushort index)
-        => this.Name.Serialize(bytes, ref index);
+    public override void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
+        => this.Name.Serialize(bytes, ref index, domainNameOffsetCache);
 
     public override void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
-    {
-        this.Name = new DomainName();
-        this.Name.Deserialize(bytes, ref offset);
-    }
+        => this.Name.Deserialize(bytes, ref offset);
 
     public override string ToString()
         => $"{nameof(this.Name)}: {this.Name}";

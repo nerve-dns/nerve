@@ -15,8 +15,8 @@ public sealed class NsResourceData : ResourceData
     public DomainName Name { get; set; } = new();
 
 
-    public override void Serialize(Span<byte> bytes, ref ushort index)
-        => this.Name.Serialize(bytes, ref index);
+    public override void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
+        => this.Name.Serialize(bytes, ref index, domainNameOffsetCache);
 
     public override void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
         => this.Name.Deserialize(bytes, ref offset);

@@ -29,9 +29,9 @@ public class Question : INetworkSerializable
         this.Class = @class;
     }
 
-    public void Serialize(Span<byte> bytes, ref ushort index)
+    public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
-        this.Name.Serialize(bytes, ref index);
+        this.Name.Serialize(bytes, ref index, domainNameOffsetCache);
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), (ushort)this.Type);
         BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index + 2, 2), (ushort)this.Class);
         index += 4;

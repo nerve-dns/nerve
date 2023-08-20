@@ -76,7 +76,8 @@ public class UdpDnsClient : IDnsClient
         byte[] bytes = ArrayPool<byte>.Shared.Rent(MaxUdpDatagramSize);
         ushort offset = 0;
 
-        requestMessage.Serialize(bytes, ref offset);
+        var domainNameOffsetCache = new Dictionary<string, ushort>();
+        requestMessage.Serialize(bytes, ref offset, domainNameOffsetCache);
 
         try
         {
