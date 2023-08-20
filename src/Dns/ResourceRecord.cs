@@ -83,6 +83,13 @@ public sealed class ResourceRecord : INetworkSerializable
                 this.ResourceData = cNameResourceData;
                 break;
             }
+            case Class.In when this.Type == Type.Soa:
+            {
+                var soaResourceData = new SoaResourceData();
+                soaResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = soaResourceData;
+                break;
+            }
             default:
                 // TODO: Throw domain exception or something more performant?
                 // A server/client needs to handle this properly eg., return ResponseCode.NotImp
