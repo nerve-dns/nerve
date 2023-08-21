@@ -34,8 +34,8 @@ public sealed class ResourceRecord : INetworkSerializable
             ushort beforeResourceDataOffset = index;
             this.ResourceData.Serialize(bytes, ref index, domainNameOffsetCache);
             
-            ushort resourceDataLength = (ushort)(index - beforeResourceDataOffset);
-            BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(resourceDataLengthOffset, 2), resourceDataLength);
+            this.ResourceDataLength = (ushort)(index - beforeResourceDataOffset);
+            BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(resourceDataLengthOffset, 2), this.ResourceDataLength);
         }
         else
         {
@@ -90,6 +90,27 @@ public sealed class ResourceRecord : INetworkSerializable
                 this.ResourceData = soaResourceData;
                 break;
             }
+            case Class.In when this.Type == Type.Mx:
+            {
+                var mxResourceData = new MxResourceData();
+                mxResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = mxResourceData;
+                break;
+            }
+            case Class.In when this.Type == Type.Ptr:
+            {
+                var ptrResourceData = new PtrResourceData();
+                ptrResourceData.Deserialize(bytes, ref offset);
+                this.ResourceData = ptrResourceData;
+                break;
+            }
+            case Class.In when this.Type == Type.Srv:
+            {
+                var srvResourceDate = new SrvResourceData();
+                srvResourceDate.Deserialize(bytes, ref offset);
+                this.ResourceData = srvResourceDate;
+                break;
+            }
             default:
                 // TODO: Throw domain exception or something more performant?
                 // A server/client needs to handle this properly eg., return ResponseCode.NotImp
@@ -125,5 +146,5 @@ public sealed class ResourceRecord : INetworkSerializable
         => HashCode.Combine(this.Name, (int)this.Type, (int)this.Class, this.Ttl, this.ResourceDataLength, this.ResourceData);
 
     public override string ToString()
-        => $"{nameof(this.Name)}: {this.Name}, {nameof(this.Type)}: {this.Type}, {nameof(this.Class)}: {this.Class}, {nameof(this.Ttl)}: {this.Ttl}, {nameof(this.ResourceDataLength)}: {this.ResourceDataLength}, {nameof(this.ResourceData)}: {this.ResourceData}";
+        => $"{nameof(this.Name)}: {this.Name}, {nameof(this.Type)}: {this.Type}, {nameof(this.Class)}: {this.Class}, {nameof(this.Ttl)}: {this.Ttl}, {nameof(this.ResourceDataLength)}: {this.ResourceDataLength}, {nameof(this.ResourceData)}({this.ResourceData?.GetType().Name}): {this.ResourceData}";
 }

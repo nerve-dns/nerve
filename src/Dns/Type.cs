@@ -40,5 +40,9 @@ public enum Type : ushort
     /// <summary>
     /// IPv6 host address.
     /// </summary>
-    Aaaa = 0x001C
+    Aaaa = 0x001C,
+    /// <summary>
+    /// Server Selection.
+    /// </summary>
+    Srv = 0x0021
 }
