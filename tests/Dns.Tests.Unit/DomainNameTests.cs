@@ -31,6 +31,22 @@ public class DomainNameTests
     }
 
     [Fact]
+    public void GetHashCode_DifferentInstancesButSameValue_ReturnsSameHashCode()
+    {
+        // Arrange
+        const string domain = "www.example.com";
+        var domainNameFirst = new DomainName(domain);
+        var domainNameSecond = new DomainName(domain);
+        
+        // Act
+        int hashCodeFirst = domainNameFirst.GetHashCode();
+        int hashCodeSecond = domainNameSecond.GetHashCode();
+        
+        // Assert
+        hashCodeFirst.Should().Be(hashCodeSecond);
+    }
+
+    [Fact]
     public void Equals_TwoInstancesWithSameDomain_ReturnsTrue()
     {
         // Arrange
