@@ -11,11 +11,40 @@ namespace Nerve.Dns;
 /// </summary>
 public sealed class ResourceRecord : INetworkSerializable
 {
+    /// <summary>
+    /// A domain name to which this resource record pertains.
+    /// </summary>
     public DomainName Name { get; set; } = new();
+
+    /// <summary>
+    /// This field specifies the meaning of the data in the RDATA field.
+    /// </summary>
     public Type Type { get; set; }
+
+    /// <summary>
+    /// The class of the data in the RDATA field.
+    /// </summary>
     public Class Class { get; set; }
+
+    /// <summary>
+    /// Specifies the time interval (in seconds) that the resource record may be 
+    /// cached before it should be discarded. Zero values are 
+    /// interpreted to mean that the RR can only be used for the 
+    /// transaction in progress, and should not be cached.
+    /// </summary>
     public uint Ttl { get; set; }
+
+    /// <summary>
+    /// The length of the RDATA field (only set after deserialization or serialization).
+    /// </summary>
     public ushort ResourceDataLength { get; set; }
+
+    /// <summary>
+    /// The <see cref="ResourceData"/> describing the resource.
+    /// The type varies based on the TYPE and CLASS of the resource record.
+    /// For example, if the TYPE is A and the CLASS is IN, the <see cref="ResourceData"/> will
+    /// be of type <see cref="AResourceData"/>.
+    /// </summary>
     public ResourceData? ResourceData { get; set; }
 
     public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
@@ -112,10 +141,12 @@ public sealed class ResourceRecord : INetworkSerializable
                 break;
             }
             default:
-                // TODO: Throw domain exception or something more performant?
-                // A server/client needs to handle this properly eg., return ResponseCode.NotImp
-                Console.WriteLine("Unsupported class " + Class + " and type " + Type);
+            {
+                var unknownResourceData = new UnknownResourceData();
+                unknownResourceData.Deserialize(bytes.Slice(offset, this.ResourceDataLength), ref offset);
+                this.ResourceData = unknownResourceData;
                 break;
+            }
         }
     }
 
