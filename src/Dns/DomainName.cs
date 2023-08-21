@@ -115,7 +115,14 @@ public sealed class DomainName : INetworkSerializable
     }
 
     public override int GetHashCode()
-        => this.Labels.GetHashCode();
+    {
+        int hash = 0;
+        foreach (string label in this.Labels)
+        {
+            hash += label.GetHashCode();
+        }
+        return hash;
+    }
 
     public override string ToString()
         => this.ToString(startLabelIndex: 0);
