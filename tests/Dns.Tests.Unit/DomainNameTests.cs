@@ -6,15 +6,23 @@ namespace Nerve.Dns.Tests.Unit;
 
 public class DomainNameTests
 {
+    // example.com
     private static readonly byte[] ExampleDotComDomainNameBytes =
     {
-        7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0
+        0x07, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x3, 0x63, 0x6f, 0x6d, 0x00
     };
 
     // The zero at the end is the index to jump to which comes after the compressed magic byte
+    // example.com
     private static readonly byte[] ExampleDotComDomainNameBytesWithCompression =
     {
-        7, 101, 120, 97, 109, 112, 108, 101, 3, 99, 111, 109, 0, DomainName.CompressedMagicByte, 0
+        0x07, 0x65, 0x78, 0x61, 0x6d, 0x70, 0x6c, 0x65, 0x3, 0x63, 0x6f, 0x6d, 0x00, DomainName.CompressedMagicByte, 0x00
+    };
+
+    // example.com and www.example.com
+    private static readonly byte[] TwiceExampleDotComDomainNameBytesWithCompression =
+    {
+        0x07, 0x65, 0x78, 0x61, 0x6D, 0x70, 0x6C, 0x65, 0x03, 0x63, 0x6F, 0x6D, 0x00, 0x03, 0x77, 0x77, 0x77, DomainName.CompressedMagicByte, 0x00
     };
 
     [Fact]
@@ -114,6 +122,25 @@ public class DomainNameTests
         // Assert
         index.Should().Be(13);
         buffer.Should().BeEquivalentTo(ExampleDotComDomainNameBytes);
+    }
+
+    [Fact]
+    public void Serialize_WithCompression_ReturnsExpectedBytes()
+    {
+        // Arrange
+        byte[] buffer = new byte[19];
+        ushort index = 0;
+        var domainName = new DomainName("example.com");
+        var domainNameSecond = new DomainName("www.example.com");
+        var domainNameOffsetCache = new Dictionary<string, ushort>();
+        
+        // Act
+        domainName.Serialize(buffer, ref index, domainNameOffsetCache);
+        domainNameSecond.Serialize(buffer, ref index, domainNameOffsetCache);
+        
+        // Assert
+        index.Should().Be(19);
+        buffer.Should().BeEquivalentTo(TwiceExampleDotComDomainNameBytesWithCompression);
     }
 
     [Fact]
