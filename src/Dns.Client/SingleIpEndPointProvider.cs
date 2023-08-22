@@ -6,14 +6,12 @@ using System.Net;
 
 namespace Nerve.Dns.Client;
 
-public class SingleIpEndPointProvider : IIpEndPointProvider
+public sealed class SingleIpEndPointProvider : IIpEndPointProvider
 {
     private readonly IPEndPoint ipEndpoint;
 
     public SingleIpEndPointProvider(IPEndPoint endpointPoint)
-    {
-        this.ipEndpoint = endpointPoint;
-    }
+        => this.ipEndpoint = endpointPoint;
 
     public IPEndPoint Get()
         => this.ipEndpoint;

@@ -41,12 +41,7 @@ public class UdpDnsClient : IDnsClient
 
     }
 
-    /// <summary>
-    /// Resolves the given question and returns the response <see cref="Message"/>. 
-    /// </summary>
-    /// <param name="question">The question.</param>
-    /// <param name="cancellationToken">The optional cancellation token.</param>
-    /// <returns></returns>
+    /// <inheritdoc />
     public async Task<Message> ResolveAsync(Question question, CancellationToken cancellationToken = default)
     {
         var requestMessage = new Message

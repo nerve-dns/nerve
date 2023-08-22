@@ -6,7 +6,7 @@ using System.Net;
 
 namespace Nerve.Dns.Client;
 
-public class RoundRobinIpEndPointProvider : IIpEndPointProvider
+public sealed class RoundRobinIpEndPointProvider : IIpEndPointProvider
 {
     private readonly IPEndPoint[] ipEndPoints;
     private int index;
