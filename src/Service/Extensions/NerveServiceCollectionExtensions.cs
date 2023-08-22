@@ -71,6 +71,7 @@ public static class NerveServiceCollectionExtensions
             });
 
         @this.AddHostedService<NerveBackgroundService>();
+        @this.AddHostedService<FileBlocklistBackgroundService>();
 
         return @this;
     }
