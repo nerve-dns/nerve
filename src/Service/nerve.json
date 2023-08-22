@@ -2,8 +2,9 @@
     "Nerve": {
         "ip": "0.0.0.0",
         "port": 5333,
+        "ForwarderMode": "https",
         "forwarders": [
-            "1.1.1.1"
+            "https://cloudflare-dns.com/dns-query"
         ],
         "blocklists": [
             {

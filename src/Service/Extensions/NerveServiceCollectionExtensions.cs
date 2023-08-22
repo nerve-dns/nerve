@@ -18,17 +18,54 @@ public static class NerveServiceCollectionExtensions
     public static IServiceCollection AddNerve(this IServiceCollection @this, IConfiguration configuration)
     {
         @this.Configure<NerveOptions>(configuration.GetSection("Nerve"));
+        @this.PostConfigure<NerveOptions>(nerveOptions =>
+        {
+            // Set default forwarders
+            if (nerveOptions.Forwarders.Length == 0)
+            {
+                if (nerveOptions.ForwarderMode == ForwarderMode.Udp)
+                {
+                    nerveOptions.Forwarders = new[] { "1.1.1.1" };
+                }
+                else
+                {
+                    nerveOptions.Forwarders = new[] { "https://cloudflare-dns.com/dns-query" };
+                }
+            }
+        });
 
         @this.AddSingleton<IDomainBlocklistService, DomainBlocklistService>();
         @this.AddSingleton<IDnsServer>(
             serviceProvider =>
             {
                 var nerveOptions = serviceProvider.GetRequiredService<IOptions<NerveOptions>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<NerveOptions>>();
 
-                IIpEndPointProvider ipEndPointProvider = nerveOptions.Value.Forwarders.Length == 1
-                    ? new SingleIpEndPointProvider(new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Forwarders[0]), 53))
-                    : new RoundRobinIpEndPointProvider(nerveOptions.Value.Forwarders.Select(ip => new IPEndPoint(IPAddress.Parse(ip), 53)).ToArray());
-                var dnsClientResolver = new DnsClientResolver(new UdpDnsClient(ipEndPointProvider));
+                IDnsClient dnsClient;
+                if (nerveOptions.Value.ForwarderMode == ForwarderMode.Udp)
+                {
+                    // TODO: Support other ports?
+                    IPEndPoint[] forwarders = nerveOptions.Value.Forwarders.Select(ip => new IPEndPoint(IPAddress.Parse(ip), 53)).ToArray();
+                    IIpEndPointProvider ipEndPointProvider = forwarders.Length == 1
+                        ? new SingleIpEndPointProvider(forwarders[0])
+                        : new RoundRobinIpEndPointProvider(forwarders);
+                    dnsClient = new UdpDnsClient(ipEndPointProvider);
+
+                    logger.LogInformation("Using UDP for DNS forwarder (DNS over UDP) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<IPEndPoint>)forwarders));
+                }
+                else
+                {
+                    Uri[] forwarders = nerveOptions.Value.Forwarders.Select(ip => new Uri(ip)).ToArray();
+
+                    IUriProvider uriProvider = forwarders.Length == 1
+                        ? new SingleUriProvider(forwarders[0])
+                        : new RoundRobinUriProvider(forwarders);
+                    dnsClient = new HttpsDnsClient(uriProvider);
+
+                    logger.LogInformation("Using HTTPS for DNS forwarder (DNS over HTTPS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<Uri>)forwarders));
+                }
+
+                var dnsClientResolver = new DnsClientResolver(dnsClient);
                 var resolver = new DomainBlocklistResolver(serviceProvider.GetRequiredService<IDomainBlocklistService>(), dnsClientResolver);
                 return new UdpDnsServer(serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(), new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port), resolver);
             });
