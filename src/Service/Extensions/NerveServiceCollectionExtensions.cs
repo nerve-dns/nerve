@@ -17,6 +17,11 @@ public static class NerveServiceCollectionExtensions
 {
     public static IServiceCollection AddNerve(this IServiceCollection @this, IConfiguration configuration)
     {
+        @this.AddWindowsService(options =>
+        {
+            options.ServiceName = "NerveService";
+        });
+
         @this.Configure<NerveOptions>(configuration.GetSection("Nerve"));
         @this.PostConfigure<NerveOptions>(nerveOptions =>
         {

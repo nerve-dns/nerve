@@ -20,6 +20,22 @@ public class NerveBackgroundService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         this.logger.LogInformation("Nerve background service started");
-        await this.dnsServer.StartAsync(cancellationToken);
+
+        try
+        {
+            await this.dnsServer.StartAsync(cancellationToken);
+        }
+        catch (TaskCanceledException)
+        {
+            // Ignore
+        }
+        catch (Exception exception)
+        {
+            this.logger.LogError(exception, "{Message}", exception.Message);
+
+            // In order for the Windows Service Management system to leverage configured
+            // recovery options, we need to terminate the process with a non-zero exit code
+            Environment.Exit(1);
+        }
     }
 }
