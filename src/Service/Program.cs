@@ -2,6 +2,7 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using Nerve.Service.Domain;
 using Nerve.Service.Extensions;
 using Nerve.Service.Web;
 
@@ -33,5 +34,14 @@ using IHost host = new HostBuilder()
         });
     })
     .Build();
+
+using (IServiceScope serviceScope = host.Services.CreateScope())
+{
+    var webHostEnvironment = serviceScope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
+
+    var db = serviceScope.ServiceProvider.GetRequiredService<NerveDbContext>();
+
+    db.Database.EnsureCreated();
+}
 
 await host.RunAsync();

@@ -10,6 +10,7 @@ using Nerve.Dns.Client;
 using Nerve.Dns.Resolver;
 using Nerve.Dns.Resolver.Blocklist;
 using Nerve.Dns.Server;
+using Nerve.Service.Domain;
 
 namespace Nerve.Service.Extensions;
 
@@ -21,6 +22,8 @@ public static class NerveServiceCollectionExtensions
         {
             options.ServiceName = "NerveService";
         });
+
+        @this.AddDbContext<NerveDbContext>();
 
         @this.Configure<NerveOptions>(configuration.GetSection("Nerve"));
         @this.PostConfigure<NerveOptions>(nerveOptions =>
