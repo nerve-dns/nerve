@@ -9,5 +9,5 @@ services:
       context: .
       dockerfile: src/Service/Dockerfile
     ports:
-      - 53:53/udp
-      - 80:80/tcp
+      - 5333:5333/udp
+      - 8080:80/tcp
