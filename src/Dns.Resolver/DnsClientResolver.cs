@@ -13,11 +13,11 @@ public sealed class DnsClientResolver : ResolverBase
     private readonly IDnsClient dnsClient;
 
     public DnsClientResolver(IDnsClient dnsClient, IResolver? next = null)
-        : base(next)
+        : base(null, next)
     {
         this.dnsClient = dnsClient;
     }
 
-    public override async Task<Message?> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
-        => await this.dnsClient.ResolveAsync(question, cancellationToken);
+    public override async Task<(Message?, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
+        => (await this.dnsClient.ResolveAsync(question, cancellationToken), false, false);
 }

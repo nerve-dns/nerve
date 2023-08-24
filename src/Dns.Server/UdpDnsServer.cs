@@ -59,7 +59,7 @@ public class UdpDnsServer : IDnsServer
 
         try
         {
-            Message? resolverResponse = await this.resolver.ResolveAsync(remoteEndPoint, message.Questions.Single(), cancellationToken);
+            (Message? resolverResponse, bool blocked, bool cached) = await this.resolver.ResolveAsync(remoteEndPoint, message.Questions.Single(), cancellationToken);
 
             if (resolverResponse is not null)
             {

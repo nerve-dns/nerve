@@ -9,5 +9,5 @@ namespace Nerve.Dns.Resolver;
 public interface IResolver
 {
     IResolver SetNext(IResolver next);
-    Task<Message?> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default);
+    Task<(Message?, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default);
 }
