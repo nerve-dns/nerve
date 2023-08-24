@@ -24,7 +24,7 @@ using IHost host = new HostBuilder()
     {
         webConfig.UseKestrel();
         webConfig.UseStartup<NerveWebStartup>();
-        webConfig.UseUrls("http://localhost:50001/");
+        webConfig.UseUrls("http://0.0.0.0/");
         webConfig.ConfigureLogging(logging =>
         {
             logging
