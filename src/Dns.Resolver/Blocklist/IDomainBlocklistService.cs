@@ -8,6 +8,8 @@ namespace Nerve.Dns.Resolver.Blocklist;
 
 public interface IDomainBlocklistService
 {
+    long Size { get; }
+
     void Add(IPAddress remoteIp, string domain, string ip);
     void Add(IPAddress remoteIp, Dictionary<string, string> domainsAndIps);
     bool Remove(IPAddress remoteIp, string domain);

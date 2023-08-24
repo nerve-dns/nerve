@@ -8,6 +8,8 @@ public sealed class CompiledBlocklist
 {
     private readonly Dictionary<string, string> blocklist;
 
+    public Dictionary<string, string> Blocklist => blocklist;
+
     public CompiledBlocklist(Dictionary<string, string> blocklist)
         => this.blocklist = blocklist;
 

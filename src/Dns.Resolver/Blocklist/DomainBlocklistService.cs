@@ -9,9 +9,14 @@ namespace Nerve.Dns.Resolver.Blocklist;
 public sealed class DomainBlocklistService : IDomainBlocklistService
 {
     private readonly Dictionary<IPAddress, CompiledBlocklist> blocklist = new();
+    private long size = 0;
+
+    public long Size => this.size;
 
     public void Add(IPAddress remoteIp, string domain, string ip)
     {
+        this.size += 1;
+
         if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
         {
             compiledBlocklist.Add(domain, ip);
@@ -22,11 +27,13 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         {
             { domain, ip },
         });
-        blocklist.Add(remoteIp, newCompiledBlocklist);
+        this.blocklist.Add(remoteIp, newCompiledBlocklist);
     }
 
     public void Add(IPAddress remoteIp, Dictionary<string, string> domainsAndIps)
     {
+        this.size += domainsAndIps.Count;
+
         if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
         {
             compiledBlocklist.Add(domainsAndIps);
@@ -39,6 +46,8 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
 
     public bool Remove(IPAddress remoteIp, string domain)
     {
+        this.size -= 1;
+
         if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
         {
             return compiledBlocklist.Remove(domain);
@@ -48,7 +57,14 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
     }
 
     public bool Remove(IPAddress remoteIp)
-        => this.blocklist.Remove(remoteIp);
+    {
+        if (this.blocklist.TryGetValue(remoteIp, out CompiledBlocklist? compiledBlocklist))
+        {
+            this.size -= compiledBlocklist.Blocklist.Count;
+            return this.blocklist.Remove(remoteIp);
+        }
+        return false;
+    }
 
     public bool TryGet(IPAddress remoteIp, out CompiledBlocklist? compiledBlocklist)
         => this.blocklist.TryGetValue(remoteIp, out compiledBlocklist);
