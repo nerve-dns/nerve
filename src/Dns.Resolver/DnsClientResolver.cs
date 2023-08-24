@@ -18,6 +18,6 @@ public sealed class DnsClientResolver : ResolverBase
         this.dnsClient = dnsClient;
     }
 
-    public override async Task<(Message?, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
+    public override async Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
         => (await this.dnsClient.ResolveAsync(question, cancellationToken), false, false);
 }

@@ -8,12 +8,16 @@ namespace Nerve.Dns.Resolver;
 
 public abstract class ResolverBase : IResolver
 {
+    protected IQueryLogger? queryLogger;
     protected IResolver? next;
 
-    protected ResolverBase(IResolver? next = null)
-        => this.next = next;
+    protected ResolverBase(IQueryLogger? queryLogger = null, IResolver? next = null)
+    {
+        this.queryLogger = queryLogger;
+        this.next = next;
+    }
 
-    public abstract Task<Message?> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default);
+    public abstract Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default);
 
     public IResolver SetNext(IResolver next)
     {

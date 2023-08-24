@@ -25,7 +25,7 @@ public sealed class DomainBlocklistResolver : ResolverBase
         this.domainBlocklistService = domainBlocklistService;
     }
 
-    public override async Task<(Message?, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
+    public override async Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
     {
         if (this.domainBlocklistService.IsBlocked(remoteEndPoint.Address, question.Name, out string? ip))
         {

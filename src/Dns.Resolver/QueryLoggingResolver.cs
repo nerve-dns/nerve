@@ -20,7 +20,7 @@ public sealed class QueryLoggingResolver : ResolverBase
         this.logger = logger;
     }
 
-    public override async Task<(Message?, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
+    public override async Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
         (Message? message, bool blocked, bool cached) = await base.next!.ResolveAsync(remoteEndPoint, question, cancellationToken);
