@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 using System.Net;
-
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 using Nerve.Dns.Client;
@@ -42,7 +42,10 @@ public static class NerveServiceCollectionExtensions
             }
         });
 
+        @this.AddMemoryCache();
+
         @this.AddSingleton<IDomainBlocklistService, DomainBlocklistService>();
+        @this.AddSingleton<IQueryLogger, DatabaseQueryLogger>();
         @this.AddSingleton<IDnsServer>(
             serviceProvider =>
             {
@@ -74,8 +77,10 @@ public static class NerveServiceCollectionExtensions
                 }
 
                 var dnsClientResolver = new DnsClientResolver(dnsClient);
-                var resolver = new DomainBlocklistResolver(serviceProvider.GetRequiredService<IDomainBlocklistService>(), dnsClientResolver);
-                return new UdpDnsServer(serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(), new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port), resolver);
+                var domainBlocklistResolver = new DomainBlocklistResolver(serviceProvider.GetRequiredService<IDomainBlocklistService>(), dnsClientResolver);
+                var cacheResolver = new CacheResolver(serviceProvider.GetRequiredService<IMemoryCache>(), domainBlocklistResolver);
+                var querryLoggingResolver = new QueryLoggingResolver(serviceProvider.GetRequiredService<ILogger<QueryLoggingResolver>>(), serviceProvider.GetRequiredService<IQueryLogger>(), cacheResolver);
+                return new UdpDnsServer(serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(), new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port), querryLoggingResolver);
             });
 
         @this.AddHostedService<NerveBackgroundService>();
