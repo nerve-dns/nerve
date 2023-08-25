@@ -4,17 +4,17 @@
 
 using System.Net;
 
-namespace Nerve.Dns.Resolver.Blocklist;
+namespace Nerve.Dns.Resolver.Allowlist;
 
-public sealed class DomainBlocklistService : IDomainBlocklistService
+public sealed class DomainAllowlistService : IDomainAllowlistService
 {
-    private readonly Dictionary<IPAddress, CompiledBlocklist> blocklist = new();
+    private readonly Dictionary<IPAddress, CompiledAllowlist> allowlist = new();
     private readonly ReaderWriterLockSlim readerWriterLockSlim = new();
     private long size = 0;
 
     public long Size => this.size;
 
-    public void Add(IPAddress remoteIp, string domain, string ip)
+    public void Add(IPAddress remoteIp, string domain)
     {
         this.readerWriterLockSlim.EnterWriteLock();
 
@@ -22,17 +22,17 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         {
             this.size += 1;
 
-            if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
+            if (this.allowlist.TryGetValue(remoteIp, out var compiledAllowlist))
             {
-                compiledBlocklist.Add(domain, ip);
+                compiledAllowlist.Add(domain);
                 return;
             }
 
-            var newCompiledBlocklist = new CompiledBlocklist(new Dictionary<string, string>()
+            var newCompiledBlocklist = new CompiledAllowlist(new HashSet<string>()
             {
-                { domain, ip },
+                { domain },
             });
-            this.blocklist.Add(remoteIp, newCompiledBlocklist);
+            this.allowlist.Add(remoteIp, newCompiledBlocklist);
         }
         finally
         {
@@ -40,22 +40,22 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         }
     }
 
-    public void Add(IPAddress remoteIp, Dictionary<string, string> domainsAndIps)
+    public void Add(IPAddress remoteIp, IEnumerable<string> domains)
     {
         this.readerWriterLockSlim.EnterWriteLock();
 
         try
         {
-            this.size += domainsAndIps.Count;
+            this.size += domains.Count();
 
-            if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
+            if (this.allowlist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
-                compiledBlocklist.Add(domainsAndIps);
+                compiledBlocklist.Add(domains);
                 return;
             }
 
-            var newCompiledBlocklist = new CompiledBlocklist(domainsAndIps);
-            this.blocklist.Add(remoteIp, newCompiledBlocklist);
+            var newCompiledAllowlist = new CompiledAllowlist(domains);
+            this.allowlist.Add(remoteIp, newCompiledAllowlist);
         }
         finally
         {
@@ -71,7 +71,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         {
             this.size -= 1;
 
-            if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
+            if (this.allowlist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
                 return compiledBlocklist.Remove(domain);
             }
@@ -90,10 +90,10 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
 
         try
         {
-            if (this.blocklist.TryGetValue(remoteIp, out CompiledBlocklist? compiledBlocklist))
+            if (this.allowlist.TryGetValue(remoteIp, out CompiledAllowlist? compiledAllowlist))
             {
-                this.size -= compiledBlocklist.Blocklist.Count;
-                return this.blocklist.Remove(remoteIp);
+                this.size -= compiledAllowlist.Allowlist.Count;
+                return this.allowlist.Remove(remoteIp);
             }
 
             return false;
@@ -104,13 +104,13 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         }
     }
 
-    public bool TryGet(IPAddress remoteIp, out CompiledBlocklist? compiledBlocklist)
+    public bool TryGet(IPAddress remoteIp, out CompiledAllowlist? compiledAllowlist)
     {
         this.readerWriterLockSlim.EnterReadLock();
         
         try
         {
-            return this.blocklist.TryGetValue(remoteIp, out compiledBlocklist);
+            return this.allowlist.TryGetValue(remoteIp, out compiledAllowlist);
         }
         finally
         {
@@ -118,25 +118,24 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         }
     }
 
-    public bool IsBlocked(IPAddress remoteIp, string domain, out string? ip)
+    public bool IsAllowed(IPAddress remoteIp, string domain)
     {
         this.readerWriterLockSlim.EnterReadLock();
 
         try
         {
             // Global blocklist
-            if (this.blocklist.TryGetValue(IPAddress.Any, out var globalCompiledBlocklist))
+            if (this.allowlist.TryGetValue(IPAddress.Any, out var globalCompiledBlocklist))
             {
-                return globalCompiledBlocklist.IsBlocked(domain, out ip);
+                return globalCompiledBlocklist.IsAllowed(domain);
             }
 
             // IP specific blocklist
-            if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
+            if (this.allowlist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
-                return compiledBlocklist.IsBlocked(domain, out ip);
+                return compiledBlocklist.IsAllowed(domain);
             }
 
-            ip = null;
             return false;
         }
         finally
