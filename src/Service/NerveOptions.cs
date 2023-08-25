@@ -12,5 +12,6 @@ public class NerveOptions
     public ushort Port { get; set; } = 53;
     public ForwarderMode ForwarderMode { get; set; } = ForwarderMode.Https;
     public string[] Forwarders { get; set; } = Array.Empty<string>();
-    public List<Blocklist>? Blocklists { get; set; }
+    public List<Blocklist> Blocklists { get; set; } = new List<Blocklist>();
+    public List<Blocklist> Allowlists { get; set; } = new List<Blocklist>();
 }

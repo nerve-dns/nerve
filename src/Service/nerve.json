@@ -9,10 +9,16 @@
         "forwarders": [
             "https://cloudflare-dns.com/dns-query"
         ],
-        "blocklists": [
+        "Blocklists": [
             {
-                "ip": "0.0.0.0",
-                "lists": []
+                "Ip": "0.0.0.0",
+                "Lists": []
+            }
+        ],
+        "Allowlists": [
+            {
+                "Ip": "0.0.0.0",
+                "Lists": []
             }
         ]
     },

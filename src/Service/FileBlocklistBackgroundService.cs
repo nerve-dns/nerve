@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Options;
 
+using Nerve.Dns.Resolver.Allowlist;
 using Nerve.Dns.Resolver.Blocklist;
 
 namespace Nerve.Service;
@@ -21,14 +22,17 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
 
     private readonly ILogger<FileBlocklistBackgroundService> logger;
     private readonly NerveOptions nerveOptions;
+    private readonly IDomainAllowlistService domainAllowlistService;
     private readonly IDomainBlocklistService domainBlocklistService;
 
     public FileBlocklistBackgroundService(
         IOptions<NerveOptions> nerveOptions,
         ILogger<FileBlocklistBackgroundService> logger,
+        IDomainAllowlistService domainAllowlistService,
         IDomainBlocklistService domainBlocklistService)
     {
         this.logger = logger;
+        this.domainAllowlistService = domainAllowlistService;
         this.domainBlocklistService = domainBlocklistService;
         this.nerveOptions = nerveOptions.Value;
     }
@@ -44,14 +48,22 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
         {
             foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
             {
-                this.LoadFileBlocklist(blocklist, path);
+                this.LoadFileBlocklist(blocklist, path, allowlist: false);
+            }
+        }
+
+        foreach (Blocklist blocklist in this.nerveOptions.Allowlists)
+        {
+            foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
+            {
+                this.LoadFileBlocklist(blocklist, path, allowlist: true);
             }
         }
 
         return Task.CompletedTask;
     }
 
-    private void LoadFileBlocklist(Blocklist blocklist, string path)
+    private void LoadFileBlocklist(Blocklist blocklist, string path, bool allowlist)
     {
         var hostsAndIps = new Dictionary<string, string>();
 
@@ -69,8 +81,16 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
             hostsAndIps[host] = ip;
         }
 
-        this.logger.LogDebug("Loaded {Count} domains from {Path}", hostsAndIps.Count, path);
-        this.domainBlocklistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps);
+        this.logger.LogDebug("Loaded {Count} {AllowedOrBlocked} domains from {Path}", hostsAndIps.Count, allowlist ? "blocked" : "allowed", path);
+        
+        if (allowlist)
+        {
+            this.domainAllowlistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps.Keys);
+        }
+        else
+        {
+            this.domainBlocklistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps);
+        }
     }
 
     private static (string ip, string host) ParseLine(string line)
