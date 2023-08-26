@@ -55,9 +55,24 @@ namespace Nerve.Service.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Queries_Client",
+                table: "Queries",
+                column: "Client");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Queries_Domain",
                 table: "Queries",
                 column: "Domain");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Queries_Status",
+                table: "Queries",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Queries_Type",
+                table: "Queries",
+                column: "Type");
         }
 
         /// <inheritdoc />

@@ -13,6 +13,9 @@ public class QueryEntityTypeConfiguration : IEntityTypeConfiguration<Query>
     {
         builder.HasKey(query => query.Id);
 
+        builder.HasIndex(query => query.Client);
         builder.HasIndex(query => query.Domain);
+        builder.HasIndex(query => query.Type);
+        builder.HasIndex(query => query.Status);
     }
 }

@@ -78,7 +78,13 @@ namespace Nerve.Service.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Client");
+
                     b.HasIndex("Domain");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Type");
 
                     b.ToTable("Queries");
                 });
