@@ -20,6 +20,7 @@ public class NerveWebStartup
     {
         app.UseRouting();
 
+        app.UseDefaultFiles();
         app.UseStaticFiles();
 
         app.UseEndpoints(endpoints =>
