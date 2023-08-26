@@ -2,6 +2,8 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using System.Text.Json.Serialization;
+
 namespace Nerve.Service.Web;
 
 public class NerveWebStartup
