@@ -17,13 +17,18 @@ public sealed partial class ListsBackgroundService : BackgroundService
     // TODO: Support multiple hosts?
     [GeneratedRegex("(?<ip>[0-9.]+)\\s+(?<host>[\\w.-]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Singleline)]
     private static partial Regex HostsRegex();
-
     private static Regex HostsPattern = HostsRegex();
+
+    private static TimeSpan HttpClientTimeout = TimeSpan.FromSeconds(5);
+
+    private const char HostsCommentChar = '#';
 
     private readonly ILogger<ListsBackgroundService> logger;
     private readonly IOptionsMonitor<NerveOptions> nerveOptions;
     private readonly IDomainAllowlistService domainAllowlistService;
     private readonly IDomainBlocklistService domainBlocklistService;
+
+    private readonly SemaphoreSlim loadListsSemaphore = new(1, 1);
 
     public ListsBackgroundService(
         IOptionsMonitor<NerveOptions> nerveOptions,
@@ -37,37 +42,62 @@ public sealed partial class ListsBackgroundService : BackgroundService
         this.nerveOptions = nerveOptions;
     }
 
-    protected override Task ExecuteAsync(CancellationToken cancellationToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         // TODO: Some kind of caching or change tracking would be nicer?
         this.domainAllowlistService.Clear();
         this.domainBlocklistService.Clear();
 
-        this.nerveOptions.OnChange(this.LoadLists);
+        this.nerveOptions.OnChange(nerveOptions => _ = this.LoadListsAsync(nerveOptions, cancellationToken));
 
-        this.LoadLists(this.nerveOptions.CurrentValue);
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            // TODO: This should probably only refresh the URL lists and not all..
+            await this.LoadListsAsync(this.nerveOptions.CurrentValue, cancellationToken);
 
-        return Task.CompletedTask;
+            await Task.Delay(TimeSpan.FromDays(1), cancellationToken);
+        }
     }
 
-    private void LoadLists(NerveOptions nerveOptions)
+    private async Task LoadListsAsync(NerveOptions nerveOptions, CancellationToken cancellationToken)
     {
-        this.logger.LogInformation("Loading {AllowlistsCount} allowlists and {BlocklistsCount} blocklists", nerveOptions.Allowlists.Count, nerveOptions.Blocklists.Count);
+        await this.loadListsSemaphore.WaitAsync(cancellationToken);
 
-        foreach (Blocklist blocklist in nerveOptions.Blocklists)
+        try
         {
-            foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
+            this.logger.LogInformation("Loading {AllowlistsCount} allowlists and {BlocklistsCount} blocklists", nerveOptions.Allowlists.Count, nerveOptions.Blocklists.Count);
+
+            foreach (Blocklist blocklist in nerveOptions.Blocklists)
             {
-                this.LoadFileBlocklist(blocklist, path, allowlist: false);
+                foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
+                {
+                    this.LoadFileBlocklist(blocklist, path, allowlist: false);
+                }
+
+                foreach (string url in blocklist.Lists.Where(list => list.StartsWith("http")))
+                {
+                    await this.LoadUrlBlocklistAsync(blocklist, url, allowlist: false, cancellationToken);
+                }
             }
+
+            foreach (Blocklist blocklist in nerveOptions.Allowlists)
+            {
+                foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
+                {
+                    this.LoadFileBlocklist(blocklist, path, allowlist: true);
+                }
+
+                foreach (string url in blocklist.Lists.Where(list => list.StartsWith("http")))
+                {
+                    await this.LoadUrlBlocklistAsync(blocklist, url, allowlist: true, cancellationToken);
+                }
+            }
+
+            this.logger.LogInformation("Total allowlist size is {TotalAllowlistSize} domains and total blocklist size is {TotalBlocklistSize} domains", this.domainAllowlistService.Size, this.domainBlocklistService.Size);
         }
-
-        foreach (Blocklist blocklist in nerveOptions.Allowlists)
+        finally
         {
-            foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
-            {
-                this.LoadFileBlocklist(blocklist, path, allowlist: true);
-            }
+            this.loadListsSemaphore.Release();
         }
     }
 
@@ -80,7 +110,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
         string? line;
         while ((line = streamReader.ReadLine()) != null)
         {
-            if (line.StartsWith("#"))
+            if (line.StartsWith(HostsCommentChar))
             {
                 continue;
             }
@@ -98,6 +128,40 @@ public sealed partial class ListsBackgroundService : BackgroundService
         else
         {
             this.domainBlocklistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps);
+        }
+    }
+
+    private async Task LoadUrlBlocklistAsync(Blocklist blocklist, string url, bool allowlist, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var hostsAndIps = new Dictionary<string, string>();
+
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = HttpClientTimeout;
+            // TODO: This should probably be somehow stream based but few hundred thousand lines are no problem
+            string content = await httpClient.GetStringAsync(url, cancellationToken);
+            string[] lines = content.Split('\n');
+            IEnumerable<(string ip, string hostname)> ipAndHostnames = lines.Where(line => !line.StartsWith(HostsCommentChar)).Select(ParseLine);
+            foreach ((string ip, string hostname) in ipAndHostnames)
+            {
+                hostsAndIps[hostname] = ip;
+            }
+
+            if (allowlist)
+            {
+                this.domainAllowlistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps.Keys);
+            }
+            else
+            {
+                this.domainBlocklistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps);
+            }
+
+            this.logger.LogInformation("Loaded {Count} {AllowedOrBlocked} domains from {Url}", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            this.logger.LogError(exception, "Error while loading list from {Url}", url);
         }
     }
 
