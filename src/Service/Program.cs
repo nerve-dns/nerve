@@ -2,6 +2,8 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using Microsoft.EntityFrameworkCore;
+
 using Nerve.Service.Domain;
 using Nerve.Service.Extensions;
 using Nerve.Service.Web;
@@ -41,7 +43,7 @@ using (IServiceScope serviceScope = host.Services.CreateScope())
 
     var db = serviceScope.ServiceProvider.GetRequiredService<NerveDbContext>();
 
-    db.Database.EnsureCreated();
+    db.Database.Migrate();
 }
 
 await host.RunAsync();
