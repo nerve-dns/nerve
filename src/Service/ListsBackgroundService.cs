@@ -12,7 +12,7 @@ using Nerve.Dns.Resolver.Blocklist;
 
 namespace Nerve.Service;
 
-public sealed partial class FileBlocklistBackgroundService : BackgroundService
+public sealed partial class ListsBackgroundService : BackgroundService
 {
     // TODO: Support multiple hosts?
     [GeneratedRegex("(?<ip>[0-9.]+)\\s+(?<host>[\\w.-]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Singleline)]
@@ -20,31 +20,41 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
 
     private static Regex HostsPattern = HostsRegex();
 
-    private readonly ILogger<FileBlocklistBackgroundService> logger;
-    private readonly NerveOptions nerveOptions;
+    private readonly ILogger<ListsBackgroundService> logger;
+    private readonly IOptionsMonitor<NerveOptions> nerveOptions;
     private readonly IDomainAllowlistService domainAllowlistService;
     private readonly IDomainBlocklistService domainBlocklistService;
 
-    public FileBlocklistBackgroundService(
-        IOptions<NerveOptions> nerveOptions,
-        ILogger<FileBlocklistBackgroundService> logger,
+    public ListsBackgroundService(
+        IOptionsMonitor<NerveOptions> nerveOptions,
+        ILogger<ListsBackgroundService> logger,
         IDomainAllowlistService domainAllowlistService,
         IDomainBlocklistService domainBlocklistService)
     {
         this.logger = logger;
         this.domainAllowlistService = domainAllowlistService;
         this.domainBlocklistService = domainBlocklistService;
-        this.nerveOptions = nerveOptions.Value;
+        this.nerveOptions = nerveOptions;
     }
 
     protected override Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (this.nerveOptions.Blocklists == null)
-        {
-            return Task.CompletedTask;
-        }
-        
-        foreach (Blocklist blocklist in this.nerveOptions.Blocklists)
+        // TODO: Some kind of caching or change tracking would be nicer?
+        this.domainAllowlistService.Clear();
+        this.domainBlocklistService.Clear();
+
+        this.nerveOptions.OnChange(this.LoadLists);
+
+        this.LoadLists(this.nerveOptions.CurrentValue);
+
+        return Task.CompletedTask;
+    }
+
+    private void LoadLists(NerveOptions nerveOptions)
+    {
+        this.logger.LogInformation("Loading {AllowlistsCount} allowlists and {BlocklistsCount} blocklists", nerveOptions.Allowlists.Count, nerveOptions.Blocklists.Count);
+
+        foreach (Blocklist blocklist in nerveOptions.Blocklists)
         {
             foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
             {
@@ -52,15 +62,13 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
             }
         }
 
-        foreach (Blocklist blocklist in this.nerveOptions.Allowlists)
+        foreach (Blocklist blocklist in nerveOptions.Allowlists)
         {
             foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
             {
                 this.LoadFileBlocklist(blocklist, path, allowlist: true);
             }
         }
-
-        return Task.CompletedTask;
     }
 
     private void LoadFileBlocklist(Blocklist blocklist, string path, bool allowlist)
@@ -81,7 +89,7 @@ public sealed partial class FileBlocklistBackgroundService : BackgroundService
             hostsAndIps[host] = ip;
         }
 
-        this.logger.LogDebug("Loaded {Count} {AllowedOrBlocked} domains from {Path}", hostsAndIps.Count, allowlist ? "blocked" : "allowed", path);
+        this.logger.LogInformation("Loaded {Count} {AllowedOrBlocked} domains from {Path}", hostsAndIps.Count, allowlist ? "allowed" : "blocked", path);
         
         if (allowlist)
         {
