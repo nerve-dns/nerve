@@ -82,7 +82,7 @@ public static class NerveServiceCollectionExtensions
                 var dnsClientResolver = new DnsClientResolver(dnsClient);
                 var domainListsResolver = new DomainListsResolver(serviceProvider.GetRequiredService<IDomainAllowlistService>(), serviceProvider.GetRequiredService<IDomainBlocklistService>(), dnsClientResolver);
                 var cacheResolver = new CacheResolver(serviceProvider.GetRequiredService<IMemoryCache>(), domainListsResolver);
-                var querryLoggingResolver = new QueryLoggingResolver(serviceProvider.GetRequiredService<ILogger<QueryLoggingResolver>>(), serviceProvider.GetRequiredService<IQueryLogger>(), cacheResolver);
+                var querryLoggingResolver = new QueryLoggingResolver(serviceProvider.GetRequiredService<IQueryLogger>(), cacheResolver);
                 return new UdpDnsServer(serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(), new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port), querryLoggingResolver);
             });
 

@@ -5,19 +5,15 @@
 using System.Diagnostics;
 using System.Net;
 
-using Microsoft.Extensions.Logging;
-
 namespace Nerve.Dns.Resolver;
 
 public sealed class QueryLoggingResolver : ResolverBase
 {
-    private readonly ILogger<QueryLoggingResolver> logger;
-
-    public QueryLoggingResolver(ILogger<QueryLoggingResolver> logger, IQueryLogger queryLogger, IResolver? next = null)
+    public QueryLoggingResolver(IQueryLogger queryLogger, IResolver? next = null)
         : base(queryLogger ?? throw new ArgumentNullException(nameof(next), "Querry logging resolver requires a query logger"), 
                 next ?? throw new ArgumentNullException(nameof(next), "Query logging resolver requires a next resolver"))
     {
-        this.logger = logger;
+
     }
 
     public override async Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
