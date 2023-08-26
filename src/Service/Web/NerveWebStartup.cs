@@ -13,7 +13,11 @@ public class NerveWebStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
     }
 
     public void Configure(IApplicationBuilder app)
