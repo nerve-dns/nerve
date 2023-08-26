@@ -143,4 +143,19 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
             this.readerWriterLockSlim.ExitReadLock();
         }
     }
+
+    public void Clear()
+    {
+        this.readerWriterLockSlim.EnterWriteLock();
+
+        try
+        {
+            this.allowlist.Clear();
+            this.size = 0;
+        }
+        finally
+        {
+            this.readerWriterLockSlim.ExitWriteLock();
+        }
+    }
 }

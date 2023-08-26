@@ -144,4 +144,19 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
             this.readerWriterLockSlim.ExitReadLock();
         }
     }
+
+    public void Clear()
+    {
+        this.readerWriterLockSlim.EnterWriteLock();
+
+        try
+        {
+            this.blocklist.Clear();
+            this.size = 0;
+        }
+        finally
+        {
+            this.readerWriterLockSlim.ExitWriteLock();
+        }
+    }
 }

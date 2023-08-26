@@ -16,4 +16,5 @@ public interface IDomainAllowlistService
     bool Remove(IPAddress remoteIp);
     bool TryGet(IPAddress remoteIp, out CompiledAllowlist? compiledAllowlist);
     bool IsAllowed(IPAddress remoteIp, string domain);
+    void Clear();
 }

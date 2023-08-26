@@ -16,4 +16,5 @@ public interface IDomainBlocklistService
     bool Remove(IPAddress remoteIp);
     bool TryGet(IPAddress remoteIp, out CompiledBlocklist? compiledBlocklist);
     bool IsBlocked(IPAddress remoteIp, string domain, out string? ip);
+    void Clear();
 }
