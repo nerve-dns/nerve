@@ -10,6 +10,7 @@ public class NerveOptions
 {
     public string Ip { get; set; } = "127.0.0.1";
     public ushort Port { get; set; } = 53;
+    public PrivacyMode PrivacyMode { get; set; } = PrivacyMode.Everything;
     public ForwarderMode ForwarderMode { get; set; } = ForwarderMode.Https;
     public string[] Forwarders { get; set; } = Array.Empty<string>();
     public List<Blocklist> Blocklists { get; set; } = new List<Blocklist>();

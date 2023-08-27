@@ -3,10 +3,11 @@
         "NerveDatabase": "Data Source=nerve.db"
     },
     "Nerve": {
-        "ip": "0.0.0.0",
-        "port": 5333,
+        "Ip": "0.0.0.0",
+        "Port": 5333,
+        "PrivacyMode": "Everything",
         "ForwarderMode": "https",
-        "forwarders": [
+        "Forwarders": [
             "https://cloudflare-dns.com/dns-query"
         ],
         "Blocklists": [
