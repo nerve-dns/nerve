@@ -48,6 +48,12 @@ public class UdpDnsServer : IDnsServer
         }
     }
 
+    public Task StopAsync(CancellationToken cancellationToken = default)
+    {
+        this.socket.Close();
+        return Task.CompletedTask;
+    }
+
     private async ValueTask ProcessDatagram(IPEndPoint remoteEndPoint, byte[] buffer, int received, CancellationToken cancellationToken)
     {
         ushort offset = 0;

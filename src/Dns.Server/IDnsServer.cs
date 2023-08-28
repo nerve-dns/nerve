@@ -7,4 +7,5 @@ namespace Nerve.Dns.Server;
 public interface IDnsServer
 {
     Task StartAsync(CancellationToken cancellationToken = default);
+    Task StopAsync(CancellationToken cancellationToken = default);
 }
