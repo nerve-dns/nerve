@@ -6,7 +6,7 @@ using Nerve.Dns.Server;
 
 namespace Nerve.Service;
 
-public class NerveBackgroundService : BackgroundService
+public sealed class NerveBackgroundService : BackgroundService
 {
     private readonly ILogger<NerveBackgroundService> logger;
     private readonly IDnsServer dnsServer;
@@ -37,5 +37,12 @@ public class NerveBackgroundService : BackgroundService
             // recovery options, we need to terminate the process with a non-zero exit code
             Environment.Exit(1);
         }
+    }
+
+    public override async Task StopAsync(CancellationToken cancellationToken)
+    {
+        await this.dnsServer.StopAsync(cancellationToken);
+
+        this.logger.LogInformation("Nerve background service stopped");
     }
 }
