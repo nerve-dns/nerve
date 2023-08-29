@@ -84,6 +84,8 @@ namespace Nerve.Service.Migrations
 
                     b.HasIndex("Status");
 
+                    b.HasIndex("Timestamp");
+
                     b.HasIndex("Type");
 
                     b.ToTable("Queries");

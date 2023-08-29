@@ -70,6 +70,11 @@ namespace Nerve.Service.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Queries_Timestamp",
+                table: "Queries",
+                column: "Timestamp");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Queries_Type",
                 table: "Queries",
                 column: "Type");

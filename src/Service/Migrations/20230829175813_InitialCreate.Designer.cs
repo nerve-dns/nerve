@@ -10,7 +10,7 @@ using Nerve.Service.Domain;
 namespace Nerve.Service.Migrations
 {
     [DbContext(typeof(NerveDbContext))]
-    [Migration("20230826090020_InitialCreate")]
+    [Migration("20230829175813_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -86,6 +86,8 @@ namespace Nerve.Service.Migrations
                     b.HasIndex("Domain");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("Timestamp");
 
                     b.HasIndex("Type");
 
