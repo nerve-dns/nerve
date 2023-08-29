@@ -44,5 +44,11 @@ public enum Type : ushort
     /// <summary>
     /// Server Selection.
     /// </summary>
-    Srv = 0x0021
+    Srv = 0x0021,
+    /// <summary>
+    /// Service Binding type for use with HTTP.
+    /// 
+    /// <see cref="https://datatracker.ietf.org/doc/draft-ietf-dnsop-svcb-https/12/"/>
+    /// </summary>
+    Https = 0x0041
 }
