@@ -2,6 +2,7 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using System.Buffers.Binary;
 using System.Text;
 
 namespace Nerve.Dns;
@@ -19,6 +20,11 @@ public sealed class DomainName : INetworkSerializable
     public const byte CompressedMagicByte = 0xC0;
 
     /// <summary>
+    /// The magic unsigned short indicating a compressed label.
+    /// </summary>
+    public const ushort CompressedMagicUShort = 0xC000;
+
+    /// <summary>
     /// The separator used to split/join the labels of a domain name.
     /// </summary>
     public const char Separator = '.';
@@ -33,9 +39,7 @@ public sealed class DomainName : INetworkSerializable
     }
 
     public DomainName(string name)
-    {
-        this.Labels = name.Split(Separator);
-    }
+        => this.Labels = name.Split(Separator);
 
     public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
@@ -45,8 +49,9 @@ public sealed class DomainName : INetworkSerializable
             string domainNameSlice = this.ToString(i);
             if (domainNameOffsetCache.TryGetValue(domainNameSlice, out ushort domainNameOffset))
             {
-                bytes[index++] = CompressedMagicByte;
-                bytes[index++] = (byte)domainNameOffset;
+                BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), (ushort)(CompressedMagicUShort | domainNameOffset));
+                index += 2;
+                
                 return;
             }
 
