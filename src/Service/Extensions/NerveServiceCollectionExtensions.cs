@@ -48,7 +48,7 @@ public static class NerveServiceCollectionExtensions
 
         @this.AddSingleton<IDomainAllowlistService, DomainAllowlistService>();
         @this.AddSingleton<IDomainBlocklistService, DomainBlocklistService>();
-        @this.AddSingleton<IQueryLogger, DatabaseQueryLogger>();
+        @this.AddSingleton<IQueryLogger, BulkDatabaseQueryLogger>();
         @this.AddSingleton<IDnsServer>(
             serviceProvider =>
             {
