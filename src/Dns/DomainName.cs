@@ -25,6 +25,11 @@ public sealed class DomainName : INetworkSerializable
     public const ushort CompressedMagicUShort = 0xC000;
 
     /// <summary>
+    /// The terminating byte indicating the end of a label.
+    /// </summary>
+    public const byte TerminatingByte = 0x0;
+
+    /// <summary>
     /// The separator used to split/join the labels of a domain name.
     /// </summary>
     public const char Separator = '.';
@@ -51,7 +56,6 @@ public sealed class DomainName : INetworkSerializable
             {
                 BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), (ushort)(CompressedMagicUShort | domainNameOffset));
                 index += 2;
-                
                 return;
             }
 
@@ -65,7 +69,7 @@ public sealed class DomainName : INetworkSerializable
             }
         }
 
-        bytes[index++] = 0x0;
+        bytes[index++] = TerminatingByte;
     }
 
     public void Deserialize(ReadOnlySpan<byte> bytes, ref ushort offset)
@@ -76,14 +80,16 @@ public sealed class DomainName : INetworkSerializable
         while ((labelLength = bytes[offset++]) != 0)
         {
             // "Decompress" label by jumping to the offset of the previous serialized label
-            if (labelLength == CompressedMagicByte)
+            if ((labelLength & CompressedMagicByte) == CompressedMagicByte)
             {
                 if (compressedOffset == -1)
                 {
                     compressedOffset = (short)offset;
                 }
 
-                offset = bytes[offset];
+                byte compressedMagicBitsRemoved = (byte)(labelLength ^ CompressedMagicByte);
+                ushort offsetShifted = (ushort)(compressedMagicBitsRemoved << 8);
+                offset = (ushort)(offsetShifted | bytes[offset]);
                 labelLength = bytes[offset];
                 offset++;
             }
