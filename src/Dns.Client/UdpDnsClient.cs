@@ -12,18 +12,25 @@ public class UdpDnsClient : IDnsClient
 {
     private const int MaxUdpDatagramSize = 512;
 
+    // TODO: Configurable?
+    private static readonly TimeSpan SendTimeout = TimeSpan.FromMilliseconds(500);
+
+    // TODO: Configurable?
+    private static readonly TimeSpan ReceiveTimeout = TimeSpan.FromMilliseconds(500);
+
     private const byte MaxRetries = 3;
 
     private readonly IIpEndPointProvider ipEndPointProvider;
-    private readonly UdpClient udpClient;
     private readonly Random random;
     private readonly SemaphoreSlim semaphoreSlim = new(initialCount: 1, maxCount: 1);
+    private UdpClient? udpClient;
 
     public UdpDnsClient(IIpEndPointProvider ipEndPointProvider)
     {
         this.ipEndPointProvider = ipEndPointProvider;
-        this.udpClient = new UdpClient(port: 0);
         this.random = new Random();
+
+        this.ReinitializeUdpClient();
     }
 
     public UdpDnsClient(IPAddress ipAddress)
@@ -42,6 +49,12 @@ public class UdpDnsClient : IDnsClient
         : this(new RoundRobinIpEndPointProvider(ipEndPoints))
     {
 
+    }
+
+    private void ReinitializeUdpClient()
+    {
+        this.udpClient?.Dispose();
+        this.udpClient = new UdpClient(port: 0);
     }
 
     /// <inheritdoc />
@@ -87,8 +100,11 @@ public class UdpDnsClient : IDnsClient
                     var domainNameOffsetCache = new Dictionary<string, ushort>();
                     requestMessage.Serialize(bytes, ref offset, domainNameOffsetCache);
 
-                    await this.udpClient.SendAsync(bytes.AsMemory(0, offset), this.ipEndPointProvider.Get(), cancellationToken);
-                    UdpReceiveResult response = await this.udpClient.ReceiveAsync(cancellationToken);
+                    ValueTask<int> sendTask = this.udpClient!.SendAsync(bytes.AsMemory(0, offset), this.ipEndPointProvider.Get(), cancellationToken);
+                    await sendTask.AsTask().WaitAsync(SendTimeout, cancellationToken);
+                    
+                    ValueTask<UdpReceiveResult> receiveTask = this.udpClient.ReceiveAsync(cancellationToken);
+                    UdpReceiveResult response = await receiveTask.AsTask().WaitAsync(ReceiveTimeout, cancellationToken);
 
                     offset = 0;
                     var responseMessage = new Message();
