@@ -126,6 +126,9 @@ public class UdpDnsClient : IDnsClient
                 currentRetry++;
             }
 
+            // Try to recover if something else is broken
+            this.ReinitializeUdpClient();
+
             throw new DnsClientException($"Failed to resolve question '{question}' after '{MaxRetries}' retries");
         }
         finally
