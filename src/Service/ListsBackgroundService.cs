@@ -71,7 +71,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
             {
                 foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
                 {
-                    this.LoadFileBlocklist(blocklist, path, allowlist: false);
+                    await this.LoadFileBlocklistAsync(blocklist, path, allowlist: false, cancellationToken);
                 }
 
                 foreach (string url in blocklist.Lists.Where(list => list.StartsWith("http")))
@@ -84,7 +84,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
             {
                 foreach (string path in blocklist.Lists.Where(list => !list.StartsWith("http")))
                 {
-                    this.LoadFileBlocklist(blocklist, path, allowlist: true);
+                    await this.LoadFileBlocklistAsync(blocklist, path, allowlist: true, cancellationToken);
                 }
 
                 foreach (string url in blocklist.Lists.Where(list => list.StartsWith("http")))
@@ -101,14 +101,14 @@ public sealed partial class ListsBackgroundService : BackgroundService
         }
     }
 
-    private void LoadFileBlocklist(Blocklist blocklist, string path, bool allowlist)
+    private async Task LoadFileBlocklistAsync(Blocklist blocklist, string path, bool allowlist, CancellationToken cancellationToken)
     {
         var hostsAndIps = new Dictionary<string, string>();
 
         using var streamReader = new StreamReader(path);
 
         string? line;
-        while ((line = streamReader.ReadLine()) != null)
+        while ((line = await streamReader.ReadLineAsync(cancellationToken)) != null)
         {
             if (line.StartsWith(HostsCommentChar))
             {
