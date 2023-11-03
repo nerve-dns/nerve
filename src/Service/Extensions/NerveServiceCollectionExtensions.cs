@@ -27,7 +27,10 @@ public static class NerveServiceCollectionExtensions
 
         @this.AddDbContext<NerveDbContext>();
 
-        @this.Configure<NerveOptions>(configuration.GetSection("Nerve"));
+        @this.AddOptions<NerveOptions>()
+            .Bind(configuration.GetSection(NerveOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         @this.PostConfigure<NerveOptions>(nerveOptions =>
         {
             // Set default forwarders
