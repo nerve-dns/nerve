@@ -7,5 +7,6 @@ namespace Nerve.Service;
 public enum ForwarderMode
 {
     Udp,
-    Https
+    Https,
+    Tls
 }

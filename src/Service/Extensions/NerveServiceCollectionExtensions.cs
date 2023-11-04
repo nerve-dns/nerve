@@ -8,6 +8,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 using Nerve.Dns.Client;
+using Nerve.Dns.Client.Tls;
 using Nerve.Dns.Resolver;
 using Nerve.Dns.Resolver.Allowlist;
 using Nerve.Dns.Resolver.Blocklist;
@@ -40,9 +41,13 @@ public static class NerveServiceCollectionExtensions
                 {
                     nerveOptions.Forwarders = new[] { "1.1.1.1" };
                 }
-                else
+                else if (nerveOptions.ForwarderMode == ForwarderMode.Https)
                 {
                     nerveOptions.Forwarders = new[] { "https://cloudflare-dns.com/dns-query" };
+                }
+                else
+                {
+                    nerveOptions.Forwarders = new[] { "one.one.one.one" };
                 }
             }
         });
@@ -70,7 +75,7 @@ public static class NerveServiceCollectionExtensions
 
                     logger.LogInformation("Using UDP for DNS forwarder (DNS over UDP) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<IPEndPoint>)forwarders));
                 }
-                else
+                else if (nerveOptions.Value.ForwarderMode == ForwarderMode.Https)
                 {
                     Uri[] forwarders = nerveOptions.Value.Forwarders.Select(ip => new Uri(ip)).ToArray();
 
@@ -80,6 +85,12 @@ public static class NerveServiceCollectionExtensions
                     dnsClient = new HttpsDnsClient(uriProvider);
 
                     logger.LogInformation("Using HTTPS for DNS forwarder (DNS over HTTPS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<Uri>)forwarders));
+                }
+                else
+                {
+                    dnsClient = new TlsDnsClient(nerveOptions.Value.Forwarders.First());
+
+                    logger.LogInformation("Using TLS for DNS forwarder (DNS over TLS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<string>)nerveOptions.Value.Forwarders));
                 }
 
                 var dnsClientResolver = new DnsClientResolver(dnsClient);
