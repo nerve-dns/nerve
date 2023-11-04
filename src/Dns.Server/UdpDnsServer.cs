@@ -41,10 +41,22 @@ public class UdpDnsServer : IDnsServer
         while (!cancellationToken.IsCancellationRequested)
         {
             byte[] buffer = ArrayPool<byte>.Shared.Rent(MaxDnsUdpDatagramSize);
-            SocketReceiveMessageFromResult result =
-                await socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, anyIpEndPoint, cancellationToken);
 
-            await ProcessDatagram((IPEndPoint)result.RemoteEndPoint, buffer, result.ReceivedBytes, cancellationToken);
+            try
+            {
+                SocketReceiveMessageFromResult result =
+                    await socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, anyIpEndPoint, cancellationToken);
+
+                await ProcessDatagram((IPEndPoint)result.RemoteEndPoint, buffer, result.ReceivedBytes, cancellationToken);
+            }
+            catch (Exception exception) when (exception is not ObjectDisposedException && exception is not TaskCanceledException && exception is not SocketException)
+            {
+                this.logger.LogError(exception, "Error in receive loop");
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
     }
 
@@ -61,8 +73,6 @@ public class UdpDnsServer : IDnsServer
         var message = new Message();
         message.Deserialize(buffer.AsSpan(0, received), ref offset);
 
-        ArrayPool<byte>.Shared.Return(buffer);
-
         try
         {
             (Message? resolverResponse, bool blocked, bool cached) = await this.resolver.ResolveAsync(remoteEndPoint, message.Questions.Single(), cancellationToken);
@@ -73,9 +83,9 @@ public class UdpDnsServer : IDnsServer
                 message.Answers = resolverResponse.Answers;
                 message.Authorities = resolverResponse.Authorities;
                 message.Additionals = resolverResponse.Additionals;
-                message.Header.AnswerCount = (ushort) message.Answers.Count;
-                message.Header.AuthorityCount = (ushort) message.Authorities.Count;
-                message.Header.AdditionalCount = (ushort) message.Additionals.Count;
+                message.Header.AnswerCount = (ushort)message.Answers.Count;
+                message.Header.AuthorityCount = (ushort)message.Authorities.Count;
+                message.Header.AdditionalCount = (ushort)message.Additionals.Count;
             }
             else
             {
