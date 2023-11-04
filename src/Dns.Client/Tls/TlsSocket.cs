@@ -5,7 +5,7 @@
 using System.Net.Security;
 using System.Net.Sockets;
 
-namespace Nerve.Dns.Client;
+namespace Nerve.Dns.Client.Tls;
 
 public class TlsSocket
 {
