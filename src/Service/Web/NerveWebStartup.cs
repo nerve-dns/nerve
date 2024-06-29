@@ -15,6 +15,16 @@ public class NerveWebStartup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll",
+                builder =>
+                {
+                    builder.AllowAnyOrigin() 
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
+        });
         services.AddControllers()
             .AddJsonOptions(options =>
             {
@@ -25,6 +35,8 @@ public class NerveWebStartup
     public void Configure(IApplicationBuilder app)
     {
         app.UseRouting();
+
+        app.UseCors("AllowAll");
 
         app.UseDefaultFiles();
         app.UseStaticFiles();
