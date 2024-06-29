@@ -33,7 +33,7 @@ public class TlsDnsClient : IDnsClient
     public TlsDnsClient(string host)
     {
         this.host = host;
-        this.sockets = new Dictionary<string, TlsSocket>();
+        this.sockets = new Dictionary<string, TlsSocket>(capacity: 10);
     }
 
     private async Task<TlsSocket> GetTlsSocketAsync(CancellationToken cancellationToken)

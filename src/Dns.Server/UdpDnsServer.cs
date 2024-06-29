@@ -106,7 +106,7 @@ public class UdpDnsServer : IDnsServer
         try
         {
             offset = 0;
-            var domainNameOffsetCache = new Dictionary<string, ushort>();
+            var domainNameOffsetCache = new Dictionary<string, ushort>(capacity: 10);
             message.Serialize(bytes.AsSpan(), ref offset, domainNameOffsetCache);
 
             await socket.SendToAsync(bytes.AsMemory(0, offset), SocketFlags.None, remoteEndPoint, cancellationToken);

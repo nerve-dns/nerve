@@ -97,7 +97,7 @@ public class UdpDnsClient : IDnsClient
                 {
                     ushort offset = 0;
 
-                    var domainNameOffsetCache = new Dictionary<string, ushort>();
+                    var domainNameOffsetCache = new Dictionary<string, ushort>(capacity: 10);
                     requestMessage.Serialize(bytes, ref offset, domainNameOffsetCache);
 
                     ValueTask<int> sendTask = this.udpClient!.SendAsync(bytes.AsMemory(0, offset), this.ipEndPointProvider.Get(), cancellationToken);

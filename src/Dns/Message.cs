@@ -8,11 +8,11 @@ public class Message : INetworkSerializable
 {
     public Header Header { get; set; } = new();
 
-    public List<Question> Questions { get; set; } = new List<Question>();
+    public List<Question> Questions { get; set; } = new List<Question>(capacity: 10);
     
-    public List<ResourceRecord> Answers { get; set; } = new List<ResourceRecord>();
-    public List<ResourceRecord> Authorities { get; set; } = new List<ResourceRecord>();
-    public List<ResourceRecord> Additionals { get; set; } = new List<ResourceRecord>();
+    public List<ResourceRecord> Answers { get; set; } = new List<ResourceRecord>(capacity: 10);
+    public List<ResourceRecord> Authorities { get; set; } = new List<ResourceRecord>(capacity: 10);
+    public List<ResourceRecord> Additionals { get; set; } = new List<ResourceRecord>(capacity: 10);
 
     public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
