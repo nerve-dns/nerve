@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 using System.Buffers;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Http.Headers;
 
@@ -18,7 +19,7 @@ public sealed class HttpsDnsClient : IDnsClient
     private readonly HttpClient httpClient;
     private readonly Random random;
     // TODO: Clear this cache after X minutes to not have stale resolved IP addresses?
-    private readonly Dictionary<Uri, Uri> resolvedUrisCache;
+    private readonly ConcurrentDictionary<Uri, Uri> resolvedUrisCache;
 
     public HttpsDnsClient(IUriProvider uriProvider)
     {
@@ -28,7 +29,7 @@ public sealed class HttpsDnsClient : IDnsClient
         this.httpClient = new HttpClient();
         this.httpClient.DefaultRequestHeaders.Add("Accept", DnsMessageContentType);
         this.random = new Random();
-        this.resolvedUrisCache = new Dictionary<Uri, Uri>();
+        this.resolvedUrisCache = new ConcurrentDictionary<Uri, Uri>();
     }
 
     public HttpsDnsClient(Uri uri)
@@ -85,7 +86,7 @@ public sealed class HttpsDnsClient : IDnsClient
             if (!this.resolvedUrisCache.TryGetValue(originalUri, out Uri? resolvedUri))
             {
                 resolvedUri = await this.ResolveUriAsync(originalUri);
-                this.resolvedUrisCache.Add(originalUri, resolvedUri);
+                this.resolvedUrisCache.TryAdd(originalUri, resolvedUri);
             }
 
             var httpRequestMessage = new HttpRequestMessage
@@ -97,6 +98,7 @@ public sealed class HttpsDnsClient : IDnsClient
                     { "Host", originalUri.Host }
                 },
             };
+
             HttpResponseMessage httpResponseMessage = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken);
             httpResponseMessage.EnsureSuccessStatusCode();
 
