@@ -13,18 +13,23 @@ using Nerve.Dns.Resolver;
 using Nerve.Service.Domain;
 using Nerve.Service.Domain.Counters;
 using Nerve.Service.Domain.Queries;
-
 using Type = Nerve.Dns.Type;
+
+using Microsoft.Extensions.Options;
 
 namespace Nerve.Service;
 
 public sealed class BulkDatabaseQueryLogger : IQueryLogger
 {
+    // TODO: Configurable?
+    private const string AnonymizedIp = "0.0.0.0";
+    private const string AnonymizedDomain = "hidden";
     private const int BulkInsertDelayMilliseconds = 500;
 
     private readonly ILogger<BulkDatabaseQueryLogger> logger;
     private readonly IServiceScopeFactory serviceScopeFactory;
     private readonly IHostApplicationLifetime hostApplicationLifetime;
+    private readonly IOptionsMonitor<NerveOptions> nerveOptionsMonitor;
 
     private readonly List<Query> bulkQueries = new(40_000);
     private readonly SemaphoreSlim semaphoreSlim = new(initialCount: 1, maxCount: 1);
@@ -32,11 +37,13 @@ public sealed class BulkDatabaseQueryLogger : IQueryLogger
     public BulkDatabaseQueryLogger(
         ILogger<BulkDatabaseQueryLogger> logger,
         IServiceScopeFactory serviceScopeFactory,
-        IHostApplicationLifetime hostApplicationLifetime)
+        IHostApplicationLifetime hostApplicationLifetime,
+        IOptionsMonitor<NerveOptions> nerveOptionsMonitor)
     {
         this.logger = logger;
         this.serviceScopeFactory = serviceScopeFactory;
         this.hostApplicationLifetime = hostApplicationLifetime;
+        this.nerveOptionsMonitor = nerveOptionsMonitor;
 
         _ = this.InsertQueriesBulkPeriodicallyAsync();
     }
@@ -89,12 +96,18 @@ public sealed class BulkDatabaseQueryLogger : IQueryLogger
 
         try
         {
+            PrivacyMode privacyMode = this.nerveOptionsMonitor.CurrentValue.PrivacyMode;
+            if (privacyMode == PrivacyMode.Anonymous)
+            {
+                return;
+            }
+
             this.bulkQueries.Add(new Query
             {
                 Timestamp = timestamp,
-                Client = client,
+                Client = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideDomains ? client : AnonymizedIp,
                 Type = type,
-                Domain = domain,
+                Domain = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideClients ? domain : AnonymizedDomain,
                 ResponseCode = responseCode,
                 Duration = duration,
                 Status = status
