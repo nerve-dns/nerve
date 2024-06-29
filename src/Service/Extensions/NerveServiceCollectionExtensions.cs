@@ -39,15 +39,15 @@ public static class NerveServiceCollectionExtensions
             {
                 if (nerveOptions.ForwarderMode == ForwarderMode.Udp)
                 {
-                    nerveOptions.Forwarders = new[] { "1.1.1.1" };
+                    nerveOptions.Forwarders = ["1.1.1.1"];
                 }
                 else if (nerveOptions.ForwarderMode == ForwarderMode.Https)
                 {
-                    nerveOptions.Forwarders = new[] { "https://cloudflare-dns.com/dns-query" };
+                    nerveOptions.Forwarders = ["https://cloudflare-dns.com/dns-query"];
                 }
                 else
                 {
-                    nerveOptions.Forwarders = new[] { "one.one.one.one" };
+                    nerveOptions.Forwarders = ["one.one.one.one"];
                 }
             }
         });

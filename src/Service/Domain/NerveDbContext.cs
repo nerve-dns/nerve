@@ -26,12 +26,12 @@ public class NerveDbContext : DbContext
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(NerveDbContext).Assembly);
 
-        modelBuilder.Entity<Counter>().HasData(new Counter[]
-        {
-            new Counter { Id = (int)CounterType.Queries, Value = 0 },
-            new Counter { Id = (int)CounterType.Cached, Value = 0 },
-            new Counter { Id = (int)CounterType.Blocked, Value = 0 }
-        });
+        modelBuilder.Entity<Counter>().HasData(
+        [
+            new() { Id = (int)CounterType.Queries, Value = 0 },
+            new() { Id = (int)CounterType.Cached, Value = 0 },
+            new() { Id = (int)CounterType.Blocked, Value = 0 }
+        ]);
 
         base.OnModelCreating(modelBuilder);
     }
