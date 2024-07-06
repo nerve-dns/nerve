@@ -1,38 +1,38 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service", "src\Service\Service.csproj", "{C04DC2AA-AADD-4437-8FEF-621B39BB9342}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service", "src\Service\Service.csproj", "{C04DC2AA-AADD-4437-8FEF-621B39BB9342}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9A864731-8409-46A4-8F52-705AE4BD72FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns", "src\Dns\Dns.csproj", "{24660CCD-F5C0-4AE6-8D30-BD074195EF1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns", "src\Dns\Dns.csproj", "{24660CCD-F5C0-4AE6-8D30-BD074195EF1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Client", "src\Dns.Client\Dns.Client.csproj", "{DBEC409A-ECC6-4ECE-A4CE-4C016D8FF858}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Client", "src\Dns.Client\Dns.Client.csproj", "{DBEC409A-ECC6-4ECE-A4CE-4C016D8FF858}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Server", "src\Dns.Server\Dns.Server.csproj", "{9473AC98-CDDA-47D9-8521-DA3493BFEDF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Server", "src\Dns.Server\Dns.Server.csproj", "{9473AC98-CDDA-47D9-8521-DA3493BFEDF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Resolver", "src\Dns.Resolver\Dns.Resolver.csproj", "{E681A7AD-09D1-4A68-9C47-4C5FCB38E9E0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Resolver", "src\Dns.Resolver\Dns.Resolver.csproj", "{E681A7AD-09D1-4A68-9C47-4C5FCB38E9E0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{DAFEC0BE-71F5-49F0-8B5A-67D012F0FA7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Tests.Unit", "tests\Dns.Tests.Unit\Dns.Tests.Unit.csproj", "{4276832B-F2E5-4E2F-8C40-997CC7E4F4F7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Tests.Unit", "tests\Dns.Tests.Unit\Dns.Tests.Unit.csproj", "{4276832B-F2E5-4E2F-8C40-997CC7E4F4F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Client.Tests.Unit", "tests\Dns.Client.Tests.Unit\Dns.Client.Tests.Unit.csproj", "{33542683-9DB6-462A-B478-14FA8FC4F4F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Client.Tests.Unit", "tests\Dns.Client.Tests.Unit\Dns.Client.Tests.Unit.csproj", "{33542683-9DB6-462A-B478-14FA8FC4F4F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Resolver.Tests.Unit", "tests\Dns.Resolver.Tests.Unit\Dns.Resolver.Tests.Unit.csproj", "{7721A222-8C29-4DCA-B372-89878DB084C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Resolver.Tests.Unit", "tests\Dns.Resolver.Tests.Unit\Dns.Resolver.Tests.Unit.csproj", "{7721A222-8C29-4DCA-B372-89878DB084C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dns.Server.Tests.Unit", "tests\Dns.Server.Tests.Unit\Dns.Server.Tests.Unit.csproj", "{8955A6B5-1FEB-4F33-AFDA-D19F0C918268}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dns.Server.Tests.Unit", "tests\Dns.Server.Tests.Unit\Dns.Server.Tests.Unit.csproj", "{8955A6B5-1FEB-4F33-AFDA-D19F0C918268}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.Tests.Integration", "tests\Service.Tests.Integration\Service.Tests.Integration.csproj", "{8461489B-1CA0-4324-8D4E-CA485529F8ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.Tests.Integration", "tests\Service.Tests.Integration\Service.Tests.Integration.csproj", "{8461489B-1CA0-4324-8D4E-CA485529F8ED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metrics", "src\Metrics\Metrics.csproj", "{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{C04DC2AA-AADD-4437-8FEF-621B39BB9342}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -75,6 +75,13 @@ Global
 		{8461489B-1CA0-4324-8D4E-CA485529F8ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8461489B-1CA0-4324-8D4E-CA485529F8ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8461489B-1CA0-4324-8D4E-CA485529F8ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C04DC2AA-AADD-4437-8FEF-621B39BB9342} = {9A864731-8409-46A4-8F52-705AE4BD72FF}
@@ -87,5 +94,9 @@ Global
 		{7721A222-8C29-4DCA-B372-89878DB084C7} = {DAFEC0BE-71F5-49F0-8B5A-67D012F0FA7A}
 		{8955A6B5-1FEB-4F33-AFDA-D19F0C918268} = {DAFEC0BE-71F5-49F0-8B5A-67D012F0FA7A}
 		{8461489B-1CA0-4324-8D4E-CA485529F8ED} = {DAFEC0BE-71F5-49F0-8B5A-67D012F0FA7A}
+		{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38} = {9A864731-8409-46A4-8F52-705AE4BD72FF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B93D20C9-38A1-4A81-A28E-60F41D8A0A26}
 	EndGlobalSection
 EndGlobal
