@@ -1,8 +1,9 @@
-// SPDX-FileCopyrightText: 2023 nerve-dns
+// SPDX-FileCopyrightText: 2024 nerve-dns
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 
 using Microsoft.Extensions.Options;
@@ -17,9 +18,9 @@ public sealed partial class ListsBackgroundService : BackgroundService
     // TODO: Support multiple hosts?
     [GeneratedRegex("(?<ip>[0-9.]+)\\s+(?<host>[\\w.-]+)", RegexOptions.IgnoreCase | RegexOptions.Compiled | RegexOptions.Singleline)]
     private static partial Regex HostsRegex();
-    private static Regex HostsPattern = HostsRegex();
+    private static readonly Regex HostsPattern = HostsRegex();
 
-    private static TimeSpan HttpClientTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan HttpClientTimeout = TimeSpan.FromSeconds(15);
 
     private const char HostsCommentChar = '#';
 
@@ -44,7 +45,8 @@ public sealed partial class ListsBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
-        // TODO: Some kind of caching or change tracking would be nicer?
+        Directory.CreateDirectory("./.cache");
+
         this.domainAllowlistService.Clear();
         this.domainBlocklistService.Clear();
 
@@ -55,7 +57,8 @@ public sealed partial class ListsBackgroundService : BackgroundService
             // TODO: This should probably only refresh the URL lists and not all..
             await this.LoadListsAsync(this.nerveOptions.CurrentValue, cancellationToken);
 
-            await Task.Delay(TimeSpan.FromDays(1), cancellationToken);
+            // Refresh one hour later so that the file cache is expired
+            await Task.Delay(TimeSpan.FromHours(25), cancellationToken);
         }
     }
 
@@ -65,7 +68,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
 
         try
         {
-            this.logger.LogInformation("Loading {AllowlistsCount} allowlists and {BlocklistsCount} blocklists", nerveOptions.Allowlists.Count, nerveOptions.Blocklists.Count);
+            this.logger.LogInformation("Loading {AllowlistsCount:n0} allowlists and {BlocklistsCount:n0} blocklists", nerveOptions.Allowlists.Count, nerveOptions.Blocklists.Count);
 
             foreach (Blocklist blocklist in nerveOptions.Blocklists)
             {
@@ -93,7 +96,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
                 }
             }
 
-            this.logger.LogInformation("Total allowlist size is {TotalAllowlistSize} domains and total blocklist size is {TotalBlocklistSize} domains", this.domainAllowlistService.Size, this.domainBlocklistService.Size);
+            this.logger.LogInformation("Total allowlist size is {TotalAllowlistSize:n0} domains and total blocklist size is {TotalBlocklistSize:n0} domains", this.domainAllowlistService.Size, this.domainBlocklistService.Size);
         }
         finally
         {
@@ -103,24 +106,38 @@ public sealed partial class ListsBackgroundService : BackgroundService
 
     private async Task LoadFileBlocklistAsync(Blocklist blocklist, string path, bool allowlist, CancellationToken cancellationToken)
     {
-        var hostsAndIps = new Dictionary<string, string>();
+        string fileName = $"{Path.GetFileNameWithoutExtension(path)}.txt";
+        string validFileName = Path.GetInvalidFileNameChars()
+            .Aggregate(fileName, (current, character) => current.Replace(character, '_'));
 
-        using var streamReader = new StreamReader(path);
+        var hostsAndIps = await this.LoadCachedFileAsync(validFileName, cancellationToken);
 
-        string? line;
-        while ((line = await streamReader.ReadLineAsync(cancellationToken)) != null)
+        if (hostsAndIps.Count == 0)
         {
-            if (line.StartsWith(HostsCommentChar))
+            using var streamWriter = new StreamWriter($"./.cache/{validFileName}", append: false, Encoding.UTF8);
+            using var streamReader = new StreamReader(path, Encoding.UTF8);
+
+            string? line;
+            while ((line = await streamReader.ReadLineAsync(cancellationToken)) != null)
             {
-                continue;
+                if (line.StartsWith(HostsCommentChar))
+                {
+                    continue;
+                }
+
+                (string ip, string host) = ParseLine(line);
+                hostsAndIps[host] = ip;
+
+                await streamWriter.WriteLineAsync($"{ip} {host}");
             }
 
-            (string ip, string host) = ParseLine(line);
-            hostsAndIps[host] = ip;
+            this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from {Path}", hostsAndIps.Count, allowlist ? "allowed" : "blocked", path);
+        }
+        else
+        {
+            this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from cache for '{Path}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", path);
         }
 
-        this.logger.LogInformation("Loaded {Count} {AllowedOrBlocked} domains from {Path}", hostsAndIps.Count, allowlist ? "allowed" : "blocked", path);
-        
         if (allowlist)
         {
             this.domainAllowlistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps.Keys);
@@ -135,17 +152,33 @@ public sealed partial class ListsBackgroundService : BackgroundService
     {
         try
         {
-            var hostsAndIps = new Dictionary<string, string>();
+            string fileName = $"{url}.txt";
+            string validFileName = Path.GetInvalidFileNameChars()
+                .Aggregate(fileName, (current, character) => current.Replace(character, '_'));
 
-            using var httpClient = new HttpClient();
-            httpClient.Timeout = HttpClientTimeout;
-            // TODO: This should probably be somehow stream based but few hundred thousand lines are no problem
-            string content = await httpClient.GetStringAsync(url, cancellationToken);
-            string[] lines = content.Split('\n');
-            IEnumerable<(string ip, string hostname)> ipAndHostnames = lines.Where(line => !line.StartsWith(HostsCommentChar)).Select(ParseLine);
-            foreach ((string ip, string hostname) in ipAndHostnames)
+            var hostsAndIps = await this.LoadCachedFileAsync(validFileName, cancellationToken) ?? [];
+
+            if (hostsAndIps.Count == 0)
             {
-                hostsAndIps[hostname] = ip;
+                using var streamWriter = new StreamWriter($"./.cache/{validFileName}", append: false, Encoding.UTF8);
+                using var httpClient = new HttpClient();
+                httpClient.Timeout = HttpClientTimeout;
+                // TODO: This should probably be somehow stream based but few hundred thousand lines are no problem
+                string content = await httpClient.GetStringAsync(url, cancellationToken);
+                string[] lines = content.Split('\n');
+                IEnumerable<(string ip, string hostname)> ipAndHostnames = lines.Where(line => !line.StartsWith(HostsCommentChar)).Select(ParseLine);
+                foreach ((string ip, string hostname) in ipAndHostnames)
+                {
+                    hostsAndIps[hostname] = ip;
+
+                    await streamWriter.WriteLineAsync($"{ip} {hostname}");
+                }
+
+                this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from '{Url}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
+            }
+            else
+            {
+                this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from cache for '{Url}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
             }
 
             if (allowlist)
@@ -156,13 +189,41 @@ public sealed partial class ListsBackgroundService : BackgroundService
             {
                 this.domainBlocklistService.Add(IPAddress.Parse(blocklist.Ip), hostsAndIps);
             }
-
-            this.logger.LogInformation("Loaded {Count} {AllowedOrBlocked} domains from {Url}", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             this.logger.LogError(exception, "Error while loading list from {Url}", url);
         }
+    }
+
+    private async Task<Dictionary<string, string>> LoadCachedFileAsync(string fileName, CancellationToken cancellationToken)
+    {
+        string filePath = $"./.cache/{fileName}";
+
+        if (!File.Exists(filePath))
+        {
+            return [];
+        }
+
+        DateTime lastWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
+        // TODO: Configurable expiration?
+        if (DateTime.UtcNow - lastWriteTimeUtc > TimeSpan.FromHours(24))
+        {
+            this.logger.LogDebug("Expired cache file '{FileName}'", fileName);
+            return [];
+        }
+
+        var hostsAndIps = new Dictionary<string, string>();
+
+        using var streamReader = new StreamReader($"./.cache/{fileName}", Encoding.UTF8);
+        string? line;
+        while ((line = await streamReader.ReadLineAsync(cancellationToken)) != null)
+        {
+            string[] ipAndHost = line.Split(' ');
+            hostsAndIps[ipAndHost[1]] = ipAndHost[0];
+        }
+        
+        return hostsAndIps;
     }
 
     private static (string ip, string host) ParseLine(string line)
