@@ -1,12 +1,14 @@
-// SPDX-FileCopyrightText: 2023 nerve-dns
+// SPDX-FileCopyrightText: 2024 nerve-dns
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using FastEndpoints;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 using Nerve.Service.Domain;
 using Nerve.Service.Extensions;
-using Nerve.Service.Web;
 
 namespace Nerve.Service;
 
@@ -46,40 +48,38 @@ public static class Program
                 .AddCommandLine(args)
                 .Build();
 
-            using IHost host = new HostBuilder()
-                .ConfigureAppConfiguration(builder =>
-                {
-                    builder.AddConfiguration(configuration);
-                })
-                .ConfigureServices((hostContext, services) =>
-                {
-                    services.AddNerve(configuration);
-                })
-                .ConfigureWebHost(webConfig =>
-                {
-                    webConfig.UseKestrel();
-                    webConfig.UseStartup<NerveWebStartup>();
-                    webConfig.UseUrls("http://0.0.0.0:50000/");
-                    webConfig.UseWebRoot(Path.Combine(Directory.GetCurrentDirectory(), "management"));
-                    webConfig.ConfigureLogging(logging =>
-                    {
-                        logging
-                            .AddConfiguration(configuration.GetSection("Logging"))
-                            .AddConsole();
-                    });
-                })
-                .Build();
+            var builder = WebApplication.CreateBuilder(args);
+            builder.Configuration.AddConfiguration(configuration);
 
-            using (IServiceScope serviceScope = host.Services.CreateScope())
+            builder.Services.AddNerve(configuration);
+
+            builder.Services.AddFastEndpoints();
+
+            WebApplication webApplication = builder.Build();
+
+            webApplication.UseDefaultFiles(new DefaultFilesOptions
+            {
+                DefaultFileNames = ["index.html"],
+                FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "management"))
+            });
+            webApplication.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "management"))
+            });
+
+            webApplication.UseFastEndpoints();
+
+            using (IServiceScope serviceScope = webApplication.Services.CreateScope())
             {
                 var webHostEnvironment = serviceScope.ServiceProvider.GetRequiredService<IWebHostEnvironment>();
 
                 var db = serviceScope.ServiceProvider.GetRequiredService<NerveDbContext>();
 
-                db.Database.Migrate();
+                await db.Database.EnsureCreatedAsync(cancellationTokenSource.Token);
+                await db.Database.MigrateAsync(cancellationTokenSource.Token);
             }
 
-            await host.RunAsync(cancellationTokenSource.Token);
+            await webApplication.RunAsync(cancellationTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
