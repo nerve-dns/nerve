@@ -2,6 +2,8 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using Nerve.Metrics;
+
 using System.Net;
 
 namespace Nerve.Dns.Resolver.Blocklist;
@@ -10,9 +12,14 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
 {
     private readonly Dictionary<IPAddress, CompiledBlocklist> blocklist = new();
     private readonly ReaderWriterLockSlim readerWriterLockSlim = new();
+    private readonly NerveMetrics? nerveMetrics;
+
     private long size = 0;
 
     public long Size => this.size;
+
+    public DomainBlocklistService(NerveMetrics? nerveMetrics = null)
+        => this.nerveMetrics = nerveMetrics;
 
     public void Add(IPAddress remoteIp, string domain, string ip)
     {
@@ -21,6 +28,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         try
         {
             this.size += 1;
+            this.nerveMetrics?.AddBlocklist(1);
 
             if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
@@ -47,6 +55,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         try
         {
             this.size += domainsAndIps.Count;
+            this.nerveMetrics?.AddBlocklist(domainsAndIps.Count);
 
             if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
@@ -70,6 +79,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         try
         {
             this.size -= 1;
+            this.nerveMetrics?.AddBlocklist(-1);
 
             if (this.blocklist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
@@ -93,6 +103,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
             if (this.blocklist.TryGetValue(remoteIp, out CompiledBlocklist? compiledBlocklist))
             {
                 this.size -= compiledBlocklist.Blocklist.Count;
+                this.nerveMetrics?.AddBlocklist(compiledBlocklist.Blocklist.Count);
                 return this.blocklist.Remove(remoteIp);
             }
 

@@ -8,14 +8,14 @@ public sealed class Blocklist
 {
     public string Ip { get; set; } = "";
 
-    public string[] Lists { get; set; } = Array.Empty<string>();
+    public List<string> Lists { get; set; } = [];
 
     public Blocklist()
     {
         
     }
 
-    public Blocklist(string ip, string[] lists)
+    public Blocklist(string ip, List<string> lists)
     {
         this.Ip = ip;
         this.Lists = lists;

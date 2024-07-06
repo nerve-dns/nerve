@@ -2,6 +2,8 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using Nerve.Metrics;
+
 using System.Net;
 
 namespace Nerve.Dns.Resolver.Allowlist;
@@ -10,9 +12,13 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
 {
     private readonly Dictionary<IPAddress, CompiledAllowlist> allowlist = new();
     private readonly ReaderWriterLockSlim readerWriterLockSlim = new();
+    private readonly NerveMetrics? nerveMetrics;
     private long size = 0;
 
     public long Size => this.size;
+
+    public DomainAllowlistService(NerveMetrics? nerveMetrics = null)
+        => this.nerveMetrics = nerveMetrics;
 
     public void Add(IPAddress remoteIp, string domain)
     {
@@ -21,6 +27,7 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
         try
         {
             this.size += 1;
+            this.nerveMetrics?.AddAllowlist(1);
 
             if (this.allowlist.TryGetValue(remoteIp, out var compiledAllowlist))
             {
@@ -46,7 +53,9 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
 
         try
         {
-            this.size += domains.Count();
+            int domainCount = domains.Count();
+            this.size += domainCount;
+            this.nerveMetrics?.AddAllowlist(domainCount);
 
             if (this.allowlist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
@@ -70,6 +79,7 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
         try
         {
             this.size -= 1;
+            this.nerveMetrics?.AddAllowlist(-1);
 
             if (this.allowlist.TryGetValue(remoteIp, out var compiledBlocklist))
             {
@@ -93,6 +103,7 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
             if (this.allowlist.TryGetValue(remoteIp, out CompiledAllowlist? compiledAllowlist))
             {
                 this.size -= compiledAllowlist.Allowlist.Count;
+                this.nerveMetrics?.AddAllowlist(compiledAllowlist.Allowlist.Count);
                 return this.allowlist.Remove(remoteIp);
             }
 

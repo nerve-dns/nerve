@@ -6,6 +6,8 @@ using System.Net;
 
 using Microsoft.Extensions.Caching.Memory;
 
+using Nerve.Metrics;
+
 namespace Nerve.Dns.Resolver;
 
 public sealed class CacheResolver : ResolverBase
@@ -19,17 +21,20 @@ public sealed class CacheResolver : ResolverBase
     };
 
     private readonly IMemoryCache memoryCache;
+    private readonly NerveMetrics? nerveMetrics;
 
-    public CacheResolver(IMemoryCache memoryCache, IResolver? next = null)
+    public CacheResolver(IMemoryCache memoryCache, NerveMetrics? nerveMetrics = null, IResolver? next = null)
         : base(null, next ?? throw new ArgumentNullException(nameof(next), "Cache resolver requires a next resolver"))
     {
         this.memoryCache = memoryCache;
+        this.nerveMetrics = nerveMetrics;
     }
 
     public override async Task<(Message? message, bool blocked, bool cached)> ResolveAsync(IPEndPoint remoteEndPoint, Question question, CancellationToken cancellationToken = default)
     {
         if (this.memoryCache.TryGetValue(question, out Message? cachedMessage))
         {
+            this.nerveMetrics?.AddCacheHit();
             return (message: cachedMessage, blocked: false, cached: true);
         }
 
@@ -51,7 +56,9 @@ public sealed class CacheResolver : ResolverBase
                 Size = 1
             });
         }
-        
+
+        this.nerveMetrics?.AddCacheMiss();
+
         return (message: resolvedMessage, blocked, cached: false);
     }
 }
