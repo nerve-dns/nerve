@@ -13,7 +13,11 @@ using Nerve.Dns.Resolver;
 using Nerve.Dns.Resolver.Allowlist;
 using Nerve.Dns.Resolver.Blocklist;
 using Nerve.Dns.Server;
+using Nerve.Metrics;
 using Nerve.Service.Domain;
+
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 
 namespace Nerve.Service.Extensions;
 
@@ -25,6 +29,30 @@ public static class NerveServiceCollectionExtensions
         {
             options.ServiceName = "NerveService";
         });
+
+        // TODO: Review
+        IConfigurationSection influxDbMetricsExporterSection = configuration.GetSection("Nerve:InfluxDBMetricsExporter");
+        if (influxDbMetricsExporterSection.Exists())
+        {
+            // TODO: Save and load from eg. ".instanceid" file? Needs to be unique between restarts..
+            const string instanceId = "60b74ea3-a39a-4195-9ded-d25bcecedac3";
+            var resourceBuilder = ResourceBuilder.CreateDefault()
+                .AddService("Nerve", "nerve", "0.0.1", autoGenerateServiceInstanceId: false, instanceId);
+
+            @this.AddOpenTelemetry()
+                .WithMetrics(builder => builder.AddInfluxDBMetricsExporter(options =>
+                {
+                    options.Endpoint = new Uri(influxDbMetricsExporterSection.GetValue<string?>("Endpoint") ?? throw new ArgumentException("Endpoint is required"));
+                    options.Bucket = influxDbMetricsExporterSection.GetValue<string?>("Bucket") ?? throw new ArgumentException("Bucket is required");
+                    options.FlushInterval = influxDbMetricsExporterSection.GetValue<int?>("FlushInterval") ?? throw new ArgumentException("FlushInterval is required"); ;
+                    options.Org = influxDbMetricsExporterSection.GetValue<string?>("Organization") ?? throw new ArgumentException("Organization is required");
+                    options.Token = influxDbMetricsExporterSection.GetValue<string?>("Token") ?? throw new ArgumentException("Token is required");
+                })
+                .SetResourceBuilder(resourceBuilder)
+                .AddMeter("Nerve"));
+        }
+
+        @this.AddSingleton<NerveMetrics>();
 
         @this.AddDbContext<NerveDbContext>();
 
@@ -93,11 +121,17 @@ public static class NerveServiceCollectionExtensions
                     logger.LogInformation("Using TLS for DNS forwarder (DNS over TLS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<string>)nerveOptions.Value.Forwarders));
                 }
 
+                var nerveMetrics = serviceProvider.GetRequiredService<NerveMetrics>();
+
                 var dnsClientResolver = new DnsClientResolver(dnsClient);
-                var domainListsResolver = new DomainListsResolver(serviceProvider.GetRequiredService<IDomainAllowlistService>(), serviceProvider.GetRequiredService<IDomainBlocklistService>(), dnsClientResolver);
-                var cacheResolver = new CacheResolver(serviceProvider.GetRequiredService<IMemoryCache>(), domainListsResolver);
+                var domainListsResolver = new DomainListsResolver(serviceProvider.GetRequiredService<IDomainAllowlistService>(), serviceProvider.GetRequiredService<IDomainBlocklistService>(), nerveMetrics, dnsClientResolver);
+                var cacheResolver = new CacheResolver(serviceProvider.GetRequiredService<IMemoryCache>(), nerveMetrics, domainListsResolver);
                 var querryLoggingResolver = new QueryLoggingResolver(serviceProvider.GetRequiredService<IQueryLogger>(), cacheResolver);
-                return new UdpDnsServer(serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(), new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port), querryLoggingResolver);
+                return new UdpDnsServer(
+                    serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(),
+                    new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port),
+                    querryLoggingResolver,
+                    nerveMetrics);
             });
 
         @this.AddHostedService<NerveBackgroundService>();

@@ -18,10 +18,18 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.6" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+    <PackageReference Include="OpenTelemetry.Exporter.InfluxDB" Version="1.0.0-alpha.3" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.9.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.9.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Dns.Server\Dns.Server.csproj" />
+    <ProjectReference Include="..\Metrics\Metrics.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Requests\" />
   </ItemGroup>
 
 </Project>
