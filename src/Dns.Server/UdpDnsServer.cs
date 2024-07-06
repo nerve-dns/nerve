@@ -9,6 +9,7 @@ using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
 
 using Nerve.Dns.Resolver;
+using Nerve.Metrics;
 
 namespace Nerve.Dns.Server;
 
@@ -20,16 +21,19 @@ public class UdpDnsServer : IDnsServer
     private readonly Socket socket;
     private readonly IPEndPoint ipEndPoint;
     private readonly IResolver resolver;
+    private readonly NerveMetrics? nerveMetrics;
 
     public UdpDnsServer(
         ILogger<UdpDnsServer> logger,
         IPEndPoint ipEndPoint,
-        IResolver resolver)
+        IResolver resolver,
+        NerveMetrics? nerveMetrics = null)
     {
         this.logger = logger;
         this.ipEndPoint = ipEndPoint;
         this.resolver = resolver;
         this.socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+        this.nerveMetrics = nerveMetrics;
     }
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
@@ -46,6 +50,8 @@ public class UdpDnsServer : IDnsServer
             {
                 SocketReceiveMessageFromResult result =
                     await socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, anyIpEndPoint, cancellationToken);
+
+                this.nerveMetrics?.AddRequestTotal();
 
                 await ProcessDatagram((IPEndPoint)result.RemoteEndPoint, buffer, result.ReceivedBytes, cancellationToken);
             }

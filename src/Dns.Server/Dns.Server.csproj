@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Dns\Dns.csproj" />
     <ProjectReference Include="..\Dns.Resolver\Dns.Resolver.csproj" />
+    <ProjectReference Include="..\Metrics\Metrics.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
