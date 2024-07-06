@@ -29,6 +29,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.Tests.Integration",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metrics", "src\Metrics\Metrics.csproj", "{AB853FE5-C3CE-4CD8-B581-A1B05EA7DC38}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projektmappenelemente", "Projektmappenelemente", "{D43FFD22-0DD0-476A-9873-4DD9FC79C417}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\install.ps1 = scripts\install.ps1
+		scripts\publish.ps1 = scripts\publish.ps1
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
