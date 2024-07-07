@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Buffers.Binary;
+using System.Collections.Frozen;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -18,13 +19,13 @@ public class TlsDnsClient : IDnsClient
 
     private const byte MaxRetries = 3;
 
-    private static readonly Dictionary<string, IPAddress> knownTlsDnsServers = new()
+    private static readonly FrozenDictionary<string, IPAddress> knownTlsDnsServers = new Dictionary<string, IPAddress>()
     {
         { "one.one.one.one", IPAddress.Parse("1.1.1.1") },
         { "dns.google", IPAddress.Parse("8.8.8.8") },
         { "anycast.uncensoreddns.org", IPAddress.Parse("91.239.100.100") },
         { "dot.xfinity.com", IPAddress.Parse("96.113.151.145") }
-    };
+    }.ToFrozenDictionary();
 
     private readonly SemaphoreSlim semaphoreSlim = new(1, 1);
     private readonly Dictionary<string, TlsSocket> sockets;
