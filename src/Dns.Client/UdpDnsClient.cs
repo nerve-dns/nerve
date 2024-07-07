@@ -10,6 +10,7 @@ namespace Nerve.Dns.Client;
 
 public class UdpDnsClient : IDnsClient
 {
+    private const int UdpDnsPort = 53;
     private const int MaxUdpDatagramSize = 512;
 
     // TODO: Configurable?
@@ -34,7 +35,7 @@ public class UdpDnsClient : IDnsClient
     }
 
     public UdpDnsClient(IPAddress ipAddress)
-        : this(new IPEndPoint(ipAddress, 53))
+        : this(new IPEndPoint(ipAddress, UdpDnsPort))
     {
 
     }

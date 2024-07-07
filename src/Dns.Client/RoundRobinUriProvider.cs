@@ -17,11 +17,11 @@ public sealed class RoundRobinUriProvider : IUriProvider
 
     public Uri Get()
     {
-        if (index == uris.Length)
+        if (this.index == this.uris.Length)
         {
-            index = 0;
+            this.index = 0;
         }
 
-        return uris[index++];
+        return this.uris[this.index++];
     }
 }

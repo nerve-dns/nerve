@@ -2,8 +2,6 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using System.Runtime.Serialization;
-
 namespace Nerve.Dns.Client;
 
 public sealed class DnsClientException : Exception
@@ -14,11 +12,6 @@ public sealed class DnsClientException : Exception
 
     public DnsClientException(string? message)
         : base(message)
-    {
-    }
-
-    public DnsClientException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
     {
     }
 

@@ -19,11 +19,11 @@ public sealed class RoundRobinIpEndPointProvider : IIpEndPointProvider
 
     public IPEndPoint Get()
     {
-        if (index == ipEndPoints.Length)
+        if (this.index == this.ipEndPoints.Length)
         {
-            index = 0;
+            this.index = 0;
         }
 
-        return ipEndPoints[index++];
+        return this.ipEndPoints[this.index++];
     }
 }
