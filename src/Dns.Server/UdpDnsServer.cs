@@ -96,11 +96,15 @@ public class UdpDnsServer : IDnsServer
             else
             {
                 message.Header.ResponseCode = ResponseCode.ServFail;
+
+                this.nerveMetrics?.AddRequestFailed();
             }
         }
         catch (Exception exception)
         {
             message.Header.ResponseCode = ResponseCode.ServFail;
+
+            this.nerveMetrics?.AddRequestFailed();
 
             this.logger.LogError(exception, "Error while resolving questions {Questions}", string.Join(", ", message.Questions.Select(q => q.ToString())));
         }
