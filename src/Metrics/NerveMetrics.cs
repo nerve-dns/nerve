@@ -13,6 +13,7 @@ public sealed class NerveMetrics
     // TODO: Research which metric to use
     private readonly Counter<long> requestsTotalCounter;
     private readonly Counter<long> requestsBlockedCounter;
+    private readonly Counter<long> requestsFailedCounter;
     private readonly Counter<long> cacheHitsCounter;
     private readonly Counter<long> cacheMissesCounter;
 
@@ -25,6 +26,7 @@ public sealed class NerveMetrics
 
         this.requestsTotalCounter = meter.CreateCounter<long>("nerve.requests.total");
         this.requestsBlockedCounter = meter.CreateCounter<long>("nerve.requests.blocked");
+        this.requestsFailedCounter = meter.CreateCounter<long>("nerve.requests.failed");
         this.cacheHitsCounter = meter.CreateCounter<long>("nerve.cache.hits");
         this.cacheMissesCounter = meter.CreateCounter<long>("nerve.cache.misses");
         this.blocklistCounter = meter.CreateUpDownCounter<long>("nerve.blocklist.count");
@@ -39,6 +41,11 @@ public sealed class NerveMetrics
     public void AddRequestBlocked()
     {
         this.requestsBlockedCounter.Add(1);
+    }
+
+    public void AddRequestFailed()
+    {
+        this.requestsFailedCounter.Add(1);
     }
 
     public void AddCacheHit()
