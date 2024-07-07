@@ -9,7 +9,7 @@ namespace Nerve.Dns;
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.2
 /// </summary>
-public class Question : INetworkSerializable
+public sealed class Question : INetworkSerializable
 {
     public DomainName Name { get; set; } = new();
     public Type Type { get; set; } = Type.A;

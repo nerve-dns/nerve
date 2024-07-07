@@ -9,7 +9,7 @@ namespace Nerve.Dns;
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1886#section-2
 /// </summary>
-public class AaaaResourceData : ResourceData
+public sealed class AaaaResourceData : ResourceData
 {
     private const ushort Length = 16;
 

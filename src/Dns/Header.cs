@@ -9,7 +9,7 @@ namespace Nerve.Dns;
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.1
 /// </summary>
-public class Header : INetworkSerializable
+public sealed class Header : INetworkSerializable
 {
     public ushort Id { get; set; }
     public Flags Flags { get; set; } = new();

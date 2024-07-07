@@ -4,7 +4,7 @@
 
 namespace Nerve.Dns;
 
-public class Message : INetworkSerializable
+public sealed class Message : INetworkSerializable
 {
     public Header Header { get; set; } = new();
 

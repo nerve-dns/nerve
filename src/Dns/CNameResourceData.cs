@@ -7,14 +7,12 @@ namespace Nerve.Dns;
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-3.3.1
 /// </summary>
-public class CNameResourceData : ResourceData
+public sealed class CNameResourceData : ResourceData
 {
     /// <summary>
     /// A domain-name which specifies the canonical or primary name for the owner. The owner name is an alias.
     /// </summary>
     public DomainName Name { get; set; } = new();
-
-
 
     public override void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
         => this.Name.Serialize(bytes, ref index, domainNameOffsetCache);
