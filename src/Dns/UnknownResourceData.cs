@@ -12,7 +12,7 @@ public sealed class UnknownResourceData : ResourceData
     /// <summary>
     /// The data of the resource record.
     /// </summary>
-    public byte[] Data { get; set; } = Array.Empty<byte>();
+    public byte[] Data { get; set; } = [];
     
     public override void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
