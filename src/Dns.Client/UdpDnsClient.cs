@@ -24,6 +24,7 @@ public class UdpDnsClient : IDnsClient
     private readonly IIpEndPointProvider ipEndPointProvider;
     private readonly Random random;
     private readonly SemaphoreSlim semaphoreSlim = new(initialCount: 1, maxCount: 1);
+
     private UdpClient? udpClient;
 
     public UdpDnsClient(IIpEndPointProvider ipEndPointProvider)
@@ -63,6 +64,8 @@ public class UdpDnsClient : IDnsClient
     {
         await this.semaphoreSlim.WaitAsync(cancellationToken);
 
+        byte[] requestMessageBytes = ArrayPool<byte>.Shared.Rent(MaxUdpDatagramSize);
+
         try
         {
             var requestMessage = new Message
@@ -90,20 +93,19 @@ public class UdpDnsClient : IDnsClient
             requestMessage.Questions.Add(question);
 
             byte currentRetry = 0;
-            while (true)
-            {
-                byte[] bytes = ArrayPool<byte>.Shared.Rent(MaxUdpDatagramSize);
 
+            do
+            {
                 try
                 {
                     ushort offset = 0;
 
                     var domainNameOffsetCache = new Dictionary<string, ushort>(capacity: 10);
-                    requestMessage.Serialize(bytes, ref offset, domainNameOffsetCache);
+                    requestMessage.Serialize(requestMessageBytes, ref offset, domainNameOffsetCache);
 
-                    ValueTask<int> sendTask = this.udpClient!.SendAsync(bytes.AsMemory(0, offset), this.ipEndPointProvider.Get(), cancellationToken);
+                    ValueTask<int> sendTask = this.udpClient!.SendAsync(requestMessageBytes.AsMemory(0, offset), this.ipEndPointProvider.Get(), cancellationToken);
                     await sendTask.AsTask().WaitAsync(SendTimeout, cancellationToken);
-                    
+
                     ValueTask<UdpReceiveResult> receiveTask = this.udpClient.ReceiveAsync(cancellationToken);
                     UdpReceiveResult response = await receiveTask.AsTask().WaitAsync(ReceiveTimeout, cancellationToken);
 
@@ -119,13 +121,10 @@ public class UdpDnsClient : IDnsClient
                         break;
                     }
                 }
-                finally
-                {
-                    ArrayPool<byte>.Shared.Return(bytes);
-                }
 
                 currentRetry++;
             }
+            while (true);
 
             // Try to recover if something else is broken
             this.ReinitializeUdpClient();
@@ -134,6 +133,7 @@ public class UdpDnsClient : IDnsClient
         }
         finally
         {
+            ArrayPool<byte>.Shared.Return(requestMessageBytes);
             this.semaphoreSlim.Release();
         }
     }
