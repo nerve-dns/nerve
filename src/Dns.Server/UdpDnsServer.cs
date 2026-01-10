@@ -49,7 +49,7 @@ public class UdpDnsServer : IDnsServer
             try
             {
                 SocketReceiveMessageFromResult result =
-                    await socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, anyIpEndPoint, cancellationToken);
+                    await this.socket.ReceiveMessageFromAsync(buffer, SocketFlags.None, anyIpEndPoint, cancellationToken);
 
                 this.nerveMetrics?.AddRequestTotal();
 
@@ -119,7 +119,7 @@ public class UdpDnsServer : IDnsServer
             var domainNameOffsetCache = new Dictionary<string, ushort>(capacity: 10);
             message.Serialize(bytes.AsSpan(), ref offset, domainNameOffsetCache);
 
-            await socket.SendToAsync(bytes.AsMemory(0, offset), SocketFlags.None, remoteEndPoint, cancellationToken);
+            await this.socket.SendToAsync(bytes.AsMemory(0, offset), SocketFlags.None, remoteEndPoint, cancellationToken);
         }
         finally
         {

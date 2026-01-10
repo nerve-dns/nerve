@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -226,6 +227,7 @@ public sealed partial class ListsBackgroundService : BackgroundService
         return hostsAndIps;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static (string ip, string host) ParseLine(string line)
     {
         Match match = HostsPattern.Match(line);

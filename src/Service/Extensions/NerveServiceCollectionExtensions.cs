@@ -32,6 +32,7 @@ public static class NerveServiceCollectionExtensions
 
         // TODO: Review
         IConfigurationSection influxDbMetricsExporterSection = configuration.GetSection("Nerve:InfluxDBMetricsExporter");
+
         if (influxDbMetricsExporterSection.Exists())
         {
             // TODO: Save and load from eg. ".instanceid" file? Needs to be unique between restarts..

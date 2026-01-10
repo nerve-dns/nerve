@@ -39,7 +39,8 @@ public sealed class CacheResolver : ResolverBase
         }
 
         (Message? resolvedMessage, bool blocked, bool cached) = await base.next!.ResolveAsync(remoteEndPoint, question, cancellationToken);
-        if (resolvedMessage == null)
+
+        if (resolvedMessage is null)
         {
             return (ServerFailResolverResponse, blocked, cached);
         }

@@ -32,7 +32,7 @@ public class GetQueriesEndpoint : EndpointWithoutRequest<GetQueriesResponse>
     {
         int page = Math.Max(1, base.Query<int>("page", isRequired: true));
 
-        IQueryable<Query> query = nerveDbContext
+        IQueryable<Query> query = this.nerveDbContext
             .Queries
             .AsNoTracking();
 

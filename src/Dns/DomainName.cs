@@ -37,7 +37,7 @@ public sealed class DomainName : INetworkSerializable
     /// <summary>
     /// The labels representing the domain name.
     /// </summary>
-    public string[] Labels { get; private set; } = Array.Empty<string>();
+    public string[] Labels { get; private set; } = [];
 
     public DomainName()
     {
@@ -52,6 +52,7 @@ public sealed class DomainName : INetworkSerializable
         {
             // Compress already serialized domain name parts (eg., reuse google.com in youtube-ui.l.google.com if serialized earlier)
             string domainNameSlice = this.ToString(i);
+
             if (domainNameOffsetCache.TryGetValue(domainNameSlice, out ushort domainNameOffset))
             {
                 BinaryPrimitives.WriteUInt16BigEndian(bytes.Slice(index, 2), (ushort)(CompressedMagicUShort | domainNameOffset));
@@ -77,6 +78,7 @@ public sealed class DomainName : INetworkSerializable
         var labels = new List<string>();
         short compressedOffset = -1;
         byte labelLength;
+
         while ((labelLength = bytes[offset++]) != 0)
         {
             // "Decompress" label by jumping to the offset of the previous serialized label
@@ -89,6 +91,7 @@ public sealed class DomainName : INetworkSerializable
 
                 byte compressedMagicBitsRemoved = (byte)(labelLength ^ CompressedMagicByte);
                 ushort offsetShifted = (ushort)(compressedMagicBitsRemoved << 8);
+
                 offset = (ushort)(offsetShifted | bytes[offset]);
                 labelLength = bytes[offset];
                 offset++;
@@ -126,14 +129,7 @@ public sealed class DomainName : INetworkSerializable
     }
 
     public override int GetHashCode()
-    {
-        int hash = 0;
-        foreach (string label in this.Labels)
-        {
-            hash += label.GetHashCode();
-        }
-        return hash;
-    }
+        => HashCode.Combine(this.Labels);
 
     public override string ToString()
         => this.ToString(startLabelIndex: 0);
