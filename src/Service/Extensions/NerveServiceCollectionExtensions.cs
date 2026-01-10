@@ -23,6 +23,7 @@ namespace Nerve.Service.Extensions;
 
 public static class NerveServiceCollectionExtensions
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1873:Potenziell kostspielige Protokollierung vermeiden", Justification = "It's just once during startup")]
     public static IServiceCollection AddNerve(this IServiceCollection @this, IConfiguration configuration)
     {
         @this.AddWindowsService(options =>
@@ -96,7 +97,7 @@ public static class NerveServiceCollectionExtensions
                 if (nerveOptions.Value.ForwarderMode == ForwarderMode.Udp)
                 {
                     // TODO: Support other ports?
-                    IPEndPoint[] forwarders = nerveOptions.Value.Forwarders.Select(ip => new IPEndPoint(IPAddress.Parse(ip), 53)).ToArray();
+                    IPEndPoint[] forwarders = [.. nerveOptions.Value.Forwarders.Select(ip => new IPEndPoint(IPAddress.Parse(ip), 53))];
                     IIpEndPointProvider ipEndPointProvider = forwarders.Length == 1
                         ? new SingleIpEndPointProvider(forwarders[0])
                         : new RoundRobinIpEndPointProvider(forwarders);
@@ -106,7 +107,7 @@ public static class NerveServiceCollectionExtensions
                 }
                 else if (nerveOptions.Value.ForwarderMode == ForwarderMode.Https)
                 {
-                    Uri[] forwarders = nerveOptions.Value.Forwarders.Select(ip => new Uri(ip)).ToArray();
+                    Uri[] forwarders = [.. nerveOptions.Value.Forwarders.Select(ip => new Uri(ip))];
 
                     IUriProvider uriProvider = forwarders.Length == 1
                         ? new SingleUriProvider(forwarders[0])
@@ -128,6 +129,7 @@ public static class NerveServiceCollectionExtensions
                 var domainListsResolver = new DomainListsResolver(serviceProvider.GetRequiredService<IDomainAllowlistService>(), serviceProvider.GetRequiredService<IDomainBlocklistService>(), nerveMetrics, dnsClientResolver);
                 var cacheResolver = new CacheResolver(serviceProvider.GetRequiredService<IMemoryCache>(), nerveMetrics, domainListsResolver);
                 var querryLoggingResolver = new QueryLoggingResolver(serviceProvider.GetRequiredService<IQueryLogger>(), cacheResolver);
+
                 return new UdpDnsServer(
                     serviceProvider.GetRequiredService<ILogger<UdpDnsServer>>(),
                     new IPEndPoint(IPAddress.Parse(nerveOptions.Value.Ip), nerveOptions.Value.Port),

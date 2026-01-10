@@ -10,7 +10,7 @@ namespace Nerve.Dns.Resolver.Blocklist;
 
 public sealed class DomainBlocklistService : IDomainBlocklistService
 {
-    private readonly Dictionary<IPAddress, CompiledBlocklist> blocklist = new();
+    private readonly Dictionary<IPAddress, CompiledBlocklist> blocklist = [];
     private readonly ReaderWriterLockSlim readerWriterLockSlim = new();
     private readonly NerveMetrics? nerveMetrics;
 

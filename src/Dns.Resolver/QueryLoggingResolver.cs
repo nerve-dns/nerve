@@ -22,6 +22,7 @@ public sealed class QueryLoggingResolver : ResolverBase
         (Message? message, bool blocked, bool cached) = await base.next!.ResolveAsync(remoteEndPoint, question, cancellationToken);
 
         Status status = Status.Forwarded;
+
         if (cached)
         {
             status = Status.Cached;

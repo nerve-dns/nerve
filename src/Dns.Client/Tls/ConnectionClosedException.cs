@@ -2,8 +2,6 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using System.Runtime.Serialization;
-
 namespace Nerve.Dns.Client.Tls;
 
 public sealed class ConnectionClosedException : IOException
@@ -14,11 +12,6 @@ public sealed class ConnectionClosedException : IOException
 
     public ConnectionClosedException(string? message)
         : base(message)
-    {
-    }
-
-    public ConnectionClosedException(SerializationInfo info, StreamingContext context)
-        : base(info, context)
     {
     }
 
