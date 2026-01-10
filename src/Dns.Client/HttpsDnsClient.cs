@@ -17,7 +17,6 @@ public sealed class HttpsDnsClient : IDnsClient
     private readonly UdpDnsClient udpDnsClient;
     private readonly IUriProvider uriProvider;
     private readonly HttpClient httpClient;
-    private readonly Random random;
     // TODO: Clear this cache after X minutes to not have stale resolved IP addresses?
     private readonly ConcurrentDictionary<Uri, Uri> resolvedUrisCache;
 
@@ -28,7 +27,6 @@ public sealed class HttpsDnsClient : IDnsClient
         this.uriProvider = uriProvider;
         this.httpClient = new HttpClient();
         this.httpClient.DefaultRequestHeaders.Add("Accept", DnsMessageContentType);
-        this.random = new Random();
         this.resolvedUrisCache = new ConcurrentDictionary<Uri, Uri>();
     }
 
@@ -51,7 +49,7 @@ public sealed class HttpsDnsClient : IDnsClient
         {
             Header = new Header
             {
-                Id = (ushort)random.Next(ushort.MaxValue),
+                Id = (ushort)Random.Shared.Next(ushort.MaxValue),
                 Flags = new Flags
                 {
                     QueryResponse = false,
