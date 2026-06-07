@@ -26,8 +26,8 @@ public class AResourceDataTests
         aResourceData.Serialize(bytes, ref index, new Dictionary<string, ushort>());
 
         // Assert
-        index.Should().Be(ByteLength);
-        bytes.Should().BeEquivalentTo(new byte[] { 10, 1, 2, 3 });
+        Assert.Equal(ByteLength, index);
+        Assert.Equivalent(new byte[] { 10, 1, 2, 3 }, bytes);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class AResourceDataTests
         aResourceData.Deserialize(bytes, ref offset);
 
         // Assert
-        offset.Should().Be(ByteLength);
-        aResourceData.Address.Should().Be(IPAddress.Parse("10.0.0.1"));
+        Assert.Equal(ByteLength, offset);
+        Assert.Equal(IPAddress.Parse("10.0.0.1"), aResourceData.Address);
     }
 }

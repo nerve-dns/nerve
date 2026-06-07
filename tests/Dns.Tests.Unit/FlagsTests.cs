@@ -27,7 +27,7 @@ public class FlagsTests
         flags.Serialize(buffer, ref index, new Dictionary<string, ushort>());
         
         // Assert
-        buffer.Should().BeEquivalentTo(new byte[] { 129, 3 });
+        Assert.Equivalent(buffer, new byte[] { 129, 3 });
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class FlagsTests
         flags.Deserialize(buffer, ref offset);
         
         // Assert
-        flags.Should().BeEquivalentTo(new Flags
+        Assert.Equivalent(new Flags
         {
             OpCode = OpCode.Query,
             QueryResponse = true,
@@ -51,6 +51,6 @@ public class FlagsTests
             RecursionDesired = true,
             ResponseCode = ResponseCode.NxDomain,
             Truncation = false
-        });
+        }, flags);
     }
 }

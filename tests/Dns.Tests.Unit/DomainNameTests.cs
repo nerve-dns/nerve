@@ -88,7 +88,7 @@ public class DomainNameTests
         const char actualSeparator = DomainName.Separator;
         
         // Assert
-        actualSeparator.Should().Be(expectedSeparator);
+        Assert.Equal(expectedSeparator, actualSeparator);
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public class DomainNameTests
         int hashCodeSecond = domainNameSecond.GetHashCode();
         
         // Assert
-        hashCodeFirst.Should().Be(hashCodeSecond);
+        Assert.Equal(hashCodeFirst, hashCodeSecond);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public class DomainNameTests
         bool equals = domainName.Equals(domainName2);
         
         // Assert
-        equals.Should().BeTrue();
+        Assert.True(equals);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public class DomainNameTests
         bool equals = domainName.Equals(domainName2);
         
         // Assert
-        equals.Should().BeFalse();
+        Assert.False(equals);
     }
 
     [Fact]
@@ -145,7 +145,7 @@ public class DomainNameTests
         string text = domainName.ToString();
         
         // Assert
-        text.Should().Be("www.example-domain.com");
+        Assert.Equal("www.example-domain.com", text);
     }
 
     [Fact]
@@ -158,7 +158,7 @@ public class DomainNameTests
         string text = domainName.ToString(startLabelIndex: 1);
         
         // Assert
-        text.Should().Be("example-domain.com");
+        Assert.Equal("example-domain.com", text);
     }
 
     [Fact]
@@ -173,8 +173,8 @@ public class DomainNameTests
         domainName.Serialize(buffer, ref index, new Dictionary<string, ushort>());
         
         // Assert
-        index.Should().Be(13);
-        buffer.Should().BeEquivalentTo(ExampleDotComDomainNameBytes);
+        Assert.Equal((ushort)13, index);
+        Assert.Equivalent(ExampleDotComDomainNameBytes, buffer);
     }
 
     [Fact]
@@ -192,8 +192,8 @@ public class DomainNameTests
         domainNameSecond.Serialize(buffer, ref index, domainNameOffsetCache);
         
         // Assert
-        index.Should().Be(19);
-        buffer.Should().BeEquivalentTo(TwiceExampleDotComDomainNameBytesWithCompression);
+        Assert.Equal((ushort)19, index);
+        Assert.Equivalent(TwiceExampleDotComDomainNameBytesWithCompression, buffer);
     }
 
     [Fact]
@@ -234,8 +234,8 @@ public class DomainNameTests
         }
         
         // Assert
-        index.Should().Be((ushort)ManyDomainNamesBytesWithCompression.Length);
-        buffer.Should().BeEquivalentTo(ManyDomainNamesBytesWithCompression);
+        Assert.Equal((ushort)ManyDomainNamesBytesWithCompression.Length, index);
+        Assert.Equivalent(ManyDomainNamesBytesWithCompression, buffer);
     }
 
     [Fact]
@@ -249,9 +249,9 @@ public class DomainNameTests
         domainName.Deserialize(ExampleDotComDomainNameBytes, ref offset);
         
         // Assert
-        offset.Should().Be(13);
-        domainName.Labels.Length.Should().Be(2);
-        domainName.ToString().Should().Be("example.com");
+        Assert.Equal((ushort)13, offset);
+        Assert.Equal(2, domainName.Labels.Length);
+        Assert.Equal("example.com", domainName.ToString());
     }
     
     [Fact]
@@ -265,9 +265,9 @@ public class DomainNameTests
         domainName.Deserialize(ExampleDotComDomainNameBytesWithCompression, ref offset);
         
         // Assert
-        offset.Should().Be(15);
-        domainName.Labels.Length.Should().Be(2);
-        domainName.ToString().Should().Be("example.com");
+        Assert.Equal((ushort)15, offset);
+        Assert.Equal(2, domainName.Labels.Length);
+        Assert.Equal("example.com", domainName.ToString());
     }
 
     [Fact]
@@ -281,10 +281,10 @@ public class DomainNameTests
         
         // Act
         domainName.Deserialize(LargeOffsetDomainNameBytesWithCompression, ref offset);
-        
+
         // Assert
-        offset.Should().Be((ushort)LargeOffsetDomainNameBytesWithCompression.Length);
-        domainName.Labels.Length.Should().Be(3);
-        domainName.ToString().Should().Be("www.example.com");
+        Assert.Equal((ushort)LargeOffsetDomainNameBytesWithCompression.Length, offset);
+        Assert.Equal(3, domainName.Labels.Length);
+        Assert.Equal("www.example.com", domainName.ToString());
     }
 }

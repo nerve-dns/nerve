@@ -19,15 +19,15 @@ public class RoundRobinUriProviderTests
         {
             actualUris.Add(roundRobinUriProvider.Get());
         }
-        
+
         // Assert
-        actualUris.Should().BeEquivalentTo(new List<Uri>
+        Assert.Equivalent(new List<Uri>
         {
-            new Uri("https://example.com/one"),
-            new Uri("https://example.com/two"),
-            new Uri("https://example.com/one"),
-            new Uri("https://example.com/two"),
-            new Uri("https://example.com/one"),
-        });
+            new("https://example.com/one"),
+            new("https://example.com/two"),
+            new("https://example.com/one"),
+            new("https://example.com/two"),
+            new("https://example.com/one"),
+        }, actualUris);
     }
 }

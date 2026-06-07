@@ -21,15 +21,13 @@ public class RoundRobinIpEndPointProviderTests
         {
             actualIpEndPoints.Add(roundRobinIpEndPointProvider.Get());
         }
-        
+
         // Assert
-        actualIpEndPoints.Should().BeEquivalentTo(new List<IPEndPoint>
-        {
-            new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53),
-            new IPEndPoint(IPAddress.Parse("1.0.0.1"), 53),
-            new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53),
-            new IPEndPoint(IPAddress.Parse("1.0.0.1"), 53),
-            new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53)
-        });
+        Assert.Equal(5, actualIpEndPoints.Count);
+        Assert.Equal(new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53), actualIpEndPoints[0]);
+        Assert.Equal(new IPEndPoint(IPAddress.Parse("1.0.0.1"), 53), actualIpEndPoints[1]);
+        Assert.Equal(new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53), actualIpEndPoints[2]);
+        Assert.Equal(new IPEndPoint(IPAddress.Parse("1.0.0.1"), 53), actualIpEndPoints[3]);
+        Assert.Equal(new IPEndPoint(IPAddress.Parse("1.1.1.1"), 53), actualIpEndPoints[4]);
     }
 }
