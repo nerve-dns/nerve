@@ -9,11 +9,19 @@ namespace Nerve.Dns;
 
 /// <summary>
 /// https://datatracker.ietf.org/doc/html/rfc1035#section-4.1.4
-///  
-/// TODO: This implementation is currently missing some boundary checks (eg., max 63 octets per label, as mentioned in the RFC) among other things
 /// </summary>
 public sealed class DomainName : INetworkSerializable
 {
+    /// <summary>
+    /// The maximum allowed length of one label.
+    /// </summary>
+    public const byte MaxLabelLength = 63;
+
+    /// <summary>
+    /// The maximum allowed total length of a domain name.
+    /// </summary>
+    public const byte MaxTotalDomainNameLength = 255;
+
     /// <summary>
     /// The magic byte indicating a compressed label.
     /// </summary>
@@ -48,6 +56,8 @@ public sealed class DomainName : INetworkSerializable
 
     public void Serialize(Span<byte> bytes, ref ushort index, Dictionary<string, ushort> domainNameOffsetCache)
     {
+        int totalDomainNameLength = 0;
+
         for (int i = 0; i < this.Labels.Length; i++)
         {
             // Compress already serialized domain name parts (eg., reuse google.com in youtube-ui.l.google.com if serialized earlier)
@@ -63,11 +73,24 @@ public sealed class DomainName : INetworkSerializable
             domainNameOffsetCache.Add(domainNameSlice, index);
 
             string label = this.Labels[i];
+
+            if (label.Length > MaxLabelLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bytes), $"Label length '{label.Length}' exceeds maximum of '{MaxLabelLength}'");
+            }
+
             bytes[index++] = (byte)label.Length;
             foreach (char character in label)
             {
                 bytes[index++] = (byte)character;
             }
+
+            totalDomainNameLength += label.Length;
+        }
+
+        if (totalDomainNameLength > MaxTotalDomainNameLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bytes), $"Total domain name length '{totalDomainNameLength}' exceeds maximum of '{MaxTotalDomainNameLength}'");
         }
 
         bytes[index++] = TerminatingByte;
@@ -78,6 +101,7 @@ public sealed class DomainName : INetworkSerializable
         var labels = new List<string>();
         short compressedOffset = -1;
         byte labelLength;
+        int totalDomainNameLength = 0;
 
         while ((labelLength = bytes[offset++]) != 0)
         {
@@ -97,9 +121,21 @@ public sealed class DomainName : INetworkSerializable
                 offset++;
             }
 
+            if (labelLength > MaxLabelLength)
+            {
+                throw new ArgumentOutOfRangeException(nameof(bytes), $"Label length '{labelLength}' exceeds maximum of '{MaxLabelLength}'");
+            }
+
             string label = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength));
             offset += labelLength;
             labels.Add(label);
+
+            totalDomainNameLength += labelLength;
+        }
+
+        if (totalDomainNameLength > MaxTotalDomainNameLength)
+        {
+            throw new ArgumentOutOfRangeException(nameof(bytes), $"Total domain name length '{totalDomainNameLength}' exceeds maximum of '{MaxTotalDomainNameLength}'");
         }
 
         if (compressedOffset != -1)
