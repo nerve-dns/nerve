@@ -1,0 +1,22 @@
+<Solution>
+  <Folder Name="/Solution items/">
+    <File Path=".editorconfig" />
+    <File Path="scripts/install.ps1" />
+    <File Path="scripts/publish.ps1" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Dns.Client/Dns.Client.csproj" />
+    <Project Path="src/Dns.Resolver/Dns.Resolver.csproj" />
+    <Project Path="src/Dns.Server/Dns.Server.csproj" />
+    <Project Path="src/Dns/Dns.csproj" />
+    <Project Path="src/Metrics/Metrics.csproj" />
+    <Project Path="src/Service/Service.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dns.Client.Tests.Unit/Dns.Client.Tests.Unit.csproj" />
+    <Project Path="tests/Dns.Resolver.Tests.Unit/Dns.Resolver.Tests.Unit.csproj" />
+    <Project Path="tests/Dns.Server.Tests.Unit/Dns.Server.Tests.Unit.csproj" />
+    <Project Path="tests/Dns.Tests.Unit/Dns.Tests.Unit.csproj" />
+    <Project Path="tests/Service.Tests.Integration/Service.Tests.Integration.csproj" />
+  </Folder>
+</Solution>
