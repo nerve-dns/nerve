@@ -9,8 +9,12 @@ indent_style = space
 indent_size = 4
 
 [*.cs]
-# IDE0290: Primären Konstruktor verwenden
+# IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0290.severity = silent
+
+# IDE0009: Name can be simplified
+dotnet_diagnostic.IDE0003.severity = none
+dotnet_diagnostic.IDE0009.severity = none
 
 [*.md]
 max_line_length = off
