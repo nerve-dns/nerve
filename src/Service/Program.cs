@@ -2,12 +2,11 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using FastEndpoints;
-
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
 
 using Nerve.Service.Domain;
+using Nerve.Service.Endpoints.Stats;
+using Nerve.Service.Endpoints.Queries;
 using Nerve.Service.Extensions;
 
 namespace Nerve.Service;
@@ -53,21 +52,12 @@ public static class Program
 
             builder.Services.AddNerve(configuration);
 
-            builder.Services.AddFastEndpoints();
+            builder.WebHost.UseUrls("http://*:8080");
 
             WebApplication webApplication = builder.Build();
 
-            webApplication.UseDefaultFiles(new DefaultFilesOptions
-            {
-                DefaultFileNames = ["index.html"],
-                FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "management"))
-            });
-            webApplication.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(Path.Combine(builder.Environment.ContentRootPath, "management"))
-            });
-
-            webApplication.UseFastEndpoints();
+            webApplication.AddStatEndpoints();
+            webApplication.AddQueryEndpoints();
 
             using (IServiceScope serviceScope = webApplication.Services.CreateScope())
             {
@@ -75,7 +65,10 @@ public static class Program
 
                 var db = serviceScope.ServiceProvider.GetRequiredService<NerveDbContext>();
 
-                await db.Database.EnsureCreatedAsync(cancellationTokenSource.Token);
+#if DEBUG
+                await db.Database.EnsureDeletedAsync(cancellationTokenSource.Token);
+#endif
+
                 await db.Database.MigrateAsync(cancellationTokenSource.Token);
             }
 
