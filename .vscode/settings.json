@@ -1,5 +1,5 @@
 {
-    "dotnet.defaultSolution": "Nerve.sln",
+    "dotnet.defaultSolution": "Nerve.slnx",
     "files.exclude": {
         "**/.git": true,
         "**/.svn": true,

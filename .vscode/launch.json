@@ -9,7 +9,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Service/bin/Debug/net7.0/Service.dll",
+            "program": "${workspaceFolder}/src/Service/bin/Debug/net10.0/Service.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/Service",
             "stopAtEntry": false,
@@ -28,15 +28,6 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
-        },
-        {
-            "name": "Docker .NET Launch",
-            "type": "docker",
-            "request": "launch",
-            "preLaunchTask": "docker-run: debug",
-            "netCore": {
-                "appProject": "${workspaceFolder}/src/Service/Service.csproj"
-            }
         }
     ]
 }
