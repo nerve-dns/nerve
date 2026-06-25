@@ -4,6 +4,7 @@
 
 using Nerve.Metrics;
 
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace Nerve.Dns.Resolver.Allowlist;
@@ -115,7 +116,7 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
         }
     }
 
-    public bool TryGet(IPAddress remoteIp, out CompiledAllowlist? compiledAllowlist)
+    public bool TryGet(IPAddress remoteIp, [NotNullWhen(true)] out CompiledAllowlist? compiledAllowlist)
     {
         this.readerWriterLockSlim.EnterReadLock();
         

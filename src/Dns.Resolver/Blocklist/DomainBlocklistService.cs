@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 using Nerve.Metrics;
-
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 
 namespace Nerve.Dns.Resolver.Blocklist;
@@ -115,7 +115,7 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
         }
     }
 
-    public bool TryGet(IPAddress remoteIp, out CompiledBlocklist? compiledBlocklist)
+    public bool TryGet(IPAddress remoteIp, [NotNullWhen(true)] out CompiledBlocklist? compiledBlocklist)
     {
         this.readerWriterLockSlim.EnterReadLock();
         

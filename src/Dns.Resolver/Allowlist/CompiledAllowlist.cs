@@ -6,7 +6,7 @@ namespace Nerve.Dns.Resolver.Allowlist;
 
 public sealed class CompiledAllowlist
 {
-    private readonly HashSet<string> allowlist = new();
+    private readonly HashSet<string> allowlist;
 
     public HashSet<string> Allowlist => this.allowlist;
 
@@ -14,7 +14,9 @@ public sealed class CompiledAllowlist
         => this.allowlist = allowlist;
 
     public CompiledAllowlist(IEnumerable<string> allowlist)
-        => this.Add(allowlist);
+        : this([.. allowlist])
+    {
+    }
 
     public bool IsAllowed(string domain)
         => this.allowlist.Contains(domain);
