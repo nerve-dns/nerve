@@ -2,10 +2,10 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using Nerve.Metrics;
-
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+
+using Nerve.Metrics;
 
 namespace Nerve.Dns.Resolver.Allowlist;
 
@@ -36,10 +36,12 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
                 return;
             }
 
-            var newCompiledBlocklist = new CompiledAllowlist(new HashSet<string>()
+            var newHashSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                { domain },
-            });
+                { domain }
+            };
+
+            var newCompiledBlocklist = new CompiledAllowlist(newHashSet);
             this.allowlist.Add(remoteIp, newCompiledBlocklist);
         }
         finally
@@ -64,7 +66,9 @@ public sealed class DomainAllowlistService : IDomainAllowlistService
                 return;
             }
 
-            var newCompiledAllowlist = new CompiledAllowlist(domains);
+            var newHashSet = new HashSet<string>(domains, StringComparer.OrdinalIgnoreCase);
+
+            var newCompiledAllowlist = new CompiledAllowlist(newHashSet);
             this.allowlist.Add(remoteIp, newCompiledAllowlist);
         }
         finally

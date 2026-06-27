@@ -2,9 +2,10 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
-using Nerve.Metrics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
+
+using Nerve.Metrics;
 
 namespace Nerve.Dns.Resolver.Blocklist;
 
@@ -36,10 +37,12 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
                 return;
             }
 
-            var newCompiledBlocklist = new CompiledBlocklist(new Dictionary<string, string>()
+            var newDictionary = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { domain, ip },
-            });
+                { domain, ip }
+            };
+
+            var newCompiledBlocklist = new CompiledBlocklist(newDictionary);
             this.blocklist.Add(remoteIp, newCompiledBlocklist);
         }
         finally
@@ -62,8 +65,10 @@ public sealed class DomainBlocklistService : IDomainBlocklistService
                 compiledBlocklist.Add(domainsAndIps);
                 return;
             }
+            
+            var newDictionary = new Dictionary<string, string>(domainsAndIps, StringComparer.OrdinalIgnoreCase);
 
-            var newCompiledBlocklist = new CompiledBlocklist(domainsAndIps);
+            var newCompiledBlocklist = new CompiledBlocklist(newDictionary);
             this.blocklist.Add(remoteIp, newCompiledBlocklist);
         }
         finally
