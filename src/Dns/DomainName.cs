@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 using System.Buffers.Binary;
-using System.Text;
+using System.Runtime.CompilerServices;
 
 namespace Nerve.Dns;
 
@@ -126,7 +126,7 @@ public sealed class DomainName : INetworkSerializable
                 throw new ArgumentOutOfRangeException(nameof(bytes), $"Label length '{labelLength}' exceeds maximum of '{MaxLabelLength}'");
             }
 
-            string label = Encoding.ASCII.GetString(bytes.Slice(offset, labelLength));
+            string label = CreateNormalizedLabel(bytes.Slice(offset, labelLength));
             offset += labelLength;
             labels.Add(label);
 
@@ -144,6 +144,20 @@ public sealed class DomainName : INetworkSerializable
         }
 
         this.Labels = labels.ToArray();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static string CreateNormalizedLabel(ReadOnlySpan<byte> bytes)
+    {
+        int length = bytes.Length;
+
+        return string.Create(length, bytes, (dst, src) =>
+        {
+            for (int i = 0; i < length; i++)
+            {
+                dst[i] = char.ToLowerInvariant((char)src[i]);
+            }
+        });
     }
 
     private bool Equals(DomainName other)
