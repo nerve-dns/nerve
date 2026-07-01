@@ -60,18 +60,18 @@ public sealed class BulkDatabaseQueryLogger : IQueryLogger
                 {
                     if (this.bulkQueries.Count > 0)
                     {
-                        using (var scope = this.serviceScopeFactory.CreateScope())
-                        {
-                            var nerveDbContext = scope.ServiceProvider.GetRequiredService<NerveDbContext>();
+                        await using var scope = this.serviceScopeFactory.CreateAsyncScope();
+                        
+                        var nerveDbContext = scope.ServiceProvider.GetRequiredService<NerveDbContext>();
 
-                            var updateCountersQuery = new StringBuilder(200);
-                            updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count} WHERE Id = {(byte)CounterType.Queries};");
-                            updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count(query => query.Status == Status.Cached)} WHERE Id = {(byte)CounterType.Cached};");
-                            updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count(query => query.Status == Status.Blocked)} WHERE Id = {(byte)CounterType.Blocked};");
-                            await nerveDbContext.Database.ExecuteSqlRawAsync(updateCountersQuery.ToString());                            
+                        var updateCountersQuery = new StringBuilder(200);
+                        updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count} WHERE Id = {(byte)CounterType.Queries};");
+                        updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count(query => query.Status == Status.Cached)} WHERE Id = {(byte)CounterType.Cached};");
+                        updateCountersQuery.Append($"UPDATE Counters SET Value = Value + {this.bulkQueries.Count(query => query.Status == Status.Blocked)} WHERE Id = {(byte)CounterType.Blocked};");
+                        
+                        await nerveDbContext.Database.ExecuteSqlRawAsync(updateCountersQuery.ToString());                            
 
-                            await nerveDbContext.BulkInsertAsync(this.bulkQueries, cancellationToken: this.hostApplicationLifetime.ApplicationStopping);
-                        }
+                        await nerveDbContext.BulkInsertAsync(this.bulkQueries, cancellationToken: this.hostApplicationLifetime.ApplicationStopping);
 
                         this.bulkQueries.Clear();
                     }
@@ -90,24 +90,33 @@ public sealed class BulkDatabaseQueryLogger : IQueryLogger
         }
     }
 
-    public async Task LogAsync(long timestamp, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken)
+    public async Task LogAsync(DateTime timestampUtc, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken)
     {
         await this.semaphoreSlim.WaitAsync(cancellationToken);
 
         try
         {
             PrivacyMode privacyMode = this.nerveOptionsMonitor.CurrentValue.PrivacyMode;
+            
             if (privacyMode == PrivacyMode.Anonymous)
             {
                 return;
             }
 
+            var clientFinal = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideDomains
+                ? client
+                : "0.0.0.0";
+            
+            var domainFinal = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideClients
+                ? domain
+                : "hidden";
+
             this.bulkQueries.Add(new Query
             {
-                Timestamp = timestamp,
-                Client = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideDomains ? client : AnonymizedIp,
+                Timestamp = timestampUtc,
+                Client = clientFinal,
                 Type = type,
-                Domain = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideClients ? domain : AnonymizedDomain,
+                Domain = domainFinal,
                 ResponseCode = responseCode,
                 Duration = duration,
                 Status = status

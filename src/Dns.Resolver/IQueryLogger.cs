@@ -6,5 +6,5 @@ namespace Nerve.Dns.Resolver;
 
 public interface IQueryLogger
 {
-    Task LogAsync(long timestamp, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken);
+    Task LogAsync(DateTime timestampUtc, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken);
 }

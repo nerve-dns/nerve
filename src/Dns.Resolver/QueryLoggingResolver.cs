@@ -32,7 +32,7 @@ public sealed class QueryLoggingResolver : ResolverBase
             status = Status.Blocked;
         }
 
-        await this.queryLogger!.LogAsync(DateTimeOffset.UtcNow.ToUnixTimeSeconds(), remoteEndPoint.Address.ToString(), question.Type, question.Name, message!.Header.ResponseCode, (float)stopwatch.Elapsed.TotalSeconds, status, cancellationToken);
+        await this.queryLogger!.LogAsync(DateTime.UtcNow, remoteEndPoint.Address.ToString(), question.Type, question.Name, message!.Header.ResponseCode, (float)stopwatch.Elapsed.TotalSeconds, status, cancellationToken);
 
         return (message, blocked, cached);
     }
