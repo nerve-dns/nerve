@@ -22,6 +22,7 @@ public static class StatEndpoints
     {
         app.MapGet("/api/stats", GetStats);
         app.MapGet("/api/stats/top", GetStatsTop);
+        app.MapGet("/api/stats/history", GetStatsHistory);
     }
 
     public static async Task<Results<Ok<GetStatsResponse>, BadRequest>> GetStats(
@@ -86,5 +87,33 @@ public static class StatEndpoints
             [.. topResolvedDomains.Select(domainAndCount => new DomainAndCountResponse(domainAndCount.Domain, domainAndCount.Count))],
             [.. topBlockedDomains.Select(domainAndCount => new DomainAndCountResponse(domainAndCount.Domain, domainAndCount.Count))],
             [.. topClients.Select(domainAndCount => new ClientAndCountResponse(domainAndCount.Domain, domainAndCount.Count))]));
+    }
+
+    public static async Task<Results<Ok<GetStatsHistoryResponse>, BadRequest>> GetStatsHistory(
+        NerveDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var lastDay = DateTime.UtcNow.AddHours(-24);
+
+        var lastDayQueries = await dbContext.Queries
+            .AsNoTracking()
+            .Where(x => x.Timestamp >= lastDay)
+            .ToListAsync(cancellationToken);
+
+        var lastDayQueryHistory = lastDayQueries.GroupBy(x => new DateTime(
+                x.Timestamp.Year, x.Timestamp.Month, x.Timestamp.Day,
+                x.Timestamp.Hour, 0, 0, DateTimeKind.Utc))
+            .Select(g => new { Hour = g.Key, Group = g.CountBy(x => x.Status) })
+            .OrderBy(x => x.Hour)
+            .ToDictionary(x => x.Hour, x => x.Group.ToDictionary(x => x.Key, x => x.Value));
+
+        var lastDayClientHistory = lastDayQueries.GroupBy(q => new DateTime(
+                q.Timestamp.Year, q.Timestamp.Month, q.Timestamp.Day,
+                q.Timestamp.Hour, 0, 0, DateTimeKind.Utc))
+            .Select(g => new { Hour = g.Key, Group = g.CountBy(x => x.Client) })
+            .OrderBy(x => x.Hour)
+            .ToDictionary(x => x.Hour, x => x.Group.ToDictionary(x => x.Key, x => x.Value));
+
+        return TypedResults.Ok(new GetStatsHistoryResponse(lastDayQueryHistory, lastDayClientHistory));
     }
 }
