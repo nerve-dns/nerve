@@ -95,6 +95,7 @@ public sealed class HttpsDnsClient : IDnsClient
                 Headers = {
                     { "Host", originalUri.Host }
                 },
+                Version = new Version(2, 0)
             };
 
             HttpResponseMessage httpResponseMessage = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken);
