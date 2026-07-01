@@ -24,7 +24,11 @@ public class TlsDnsClient : IDnsClient
         { "one.one.one.one", IPAddress.Parse("1.1.1.1") },
         { "dns.google", IPAddress.Parse("8.8.8.8") },
         { "anycast.uncensoreddns.org", IPAddress.Parse("91.239.100.100") },
-        { "dot.xfinity.com", IPAddress.Parse("96.113.151.145") }
+        { "dot.xfinity.com", IPAddress.Parse("96.113.151.145") },
+        { "dns.quad9.net", IPAddress.Parse("9.9.9.9") },
+        { "unfiltered.joindns4.eu", IPAddress.Parse("86.54.11.100") },
+        { "dns.adguard-dns.com", IPAddress.Parse("94.140.15.15") },
+        { "unfiltered.adguard-dns.com", IPAddress.Parse("94.140.14.141") },
     }.ToFrozenDictionary();
 
     private readonly SemaphoreSlim semaphoreSlim = new(1, 1);

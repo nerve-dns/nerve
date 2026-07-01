@@ -7,8 +7,9 @@ using System.Net.Sockets;
 
 namespace Nerve.Dns.Client.Tls;
 
-public class TlsSocket
+public sealed class TlsSocket
 {
     public Socket Socket { get; init; } = null!;
+    
     public SslStream SslStream  { get; set; } = null!;
 }
