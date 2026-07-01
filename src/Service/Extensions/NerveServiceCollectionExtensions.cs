@@ -64,25 +64,6 @@ public static class NerveServiceCollectionExtensions
             .Bind(configuration.GetSection(NerveOptions.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        @this.PostConfigure<NerveOptions>(nerveOptions =>
-        {
-            // Set default forwarders
-            if (nerveOptions.Forwarders.Length == 0)
-            {
-                if (nerveOptions.ForwarderMode == ForwarderMode.Udp)
-                {
-                    nerveOptions.Forwarders = ["1.1.1.1"];
-                }
-                else if (nerveOptions.ForwarderMode == ForwarderMode.Https)
-                {
-                    nerveOptions.Forwarders = ["https://cloudflare-dns.com/dns-query"];
-                }
-                else
-                {
-                    nerveOptions.Forwarders = ["one.one.one.one"];
-                }
-            }
-        });
 
         @this.AddMemoryCache();
 
@@ -144,7 +125,7 @@ public static class NerveServiceCollectionExtensions
                 {
                     dnsClient = new TlsDnsClient(resolvers[0].Endpoint);
 
-                    logger.LogInformation("Using TLS for DNS forwarder (DNS over TLS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<string>)nerveOptions.Value.Forwarders));
+                    logger.LogInformation("Using TLS for DNS forwarder (DNS over TLS) with forwarders '{Forwarders}'", string.Join(", ", resolvers.Select(r => r.Endpoint)));
                 }
 
                 var nerveMetrics = serviceProvider.GetRequiredService<NerveMetrics>();

@@ -1,37 +1,21 @@
 {
     "ConnectionStrings": {
-        "NerveDatabase": "Data Source=nerve.db"
+        "NerveDatabase": "Data Source=./nerve.db"
     },
     "Nerve": {
-        "Ip": "0.0.0.0",
-        "Port": 5333,
-        "PrivacyMode": "Everything",
-        "ForwarderMode": "https",
-        "Forwarders": [
-            "https://cloudflare-dns.com/dns-query"
-        ],
-        "Blocklists": [
-            {
-                "Ip": "0.0.0.0",
-                "Lists": []
-            }
-        ],
-        "Allowlists": [
-            {
-                "Ip": "0.0.0.0",
-                "Lists": []
-            }
-        ]
+        "Ip": "127.0.0.1",
+        "Port": 53,
+        "PrivacyMode": "Everything"
     },
     "Logging": {
         "LogLevel": {
-            "Default": "Debug",
+            "Default": "Information",
             "System": "Warning",
             "Microsoft": "Warning"
         },
         "Console": {
             "LogLevel": {
-                "Default": "Debug",
+                "Default": "Information",
                 "System": "Warning",
                 "Microsoft": "Warning"
             }
