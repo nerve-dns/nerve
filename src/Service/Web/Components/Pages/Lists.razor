@@ -58,7 +58,7 @@ else
                                 <button class="btn btn-sm btn-primary" @onclick="@(() => this.RefreshListAsync(list.Ip, list.Id))">
                                     Refresh
                                 </button>
-                                <button class="btn btn-sm btn-danger" @onclick="@(() => this.RemoveListAsync(list.Ip, list.Location, list.Type))">
+                                <button class="btn btn-sm btn-danger" @onclick="@(() => this.DeleteListAsync(list.Id))">
                                     Delete
                                 </button>
                             </div>
@@ -100,9 +100,9 @@ else
         await this.LoadAsync();
     }
 
-    private async Task RemoveListAsync(string ip, string location, ListType type)
+    private async Task DeleteListAsync(int id)
     {
-        await this.NerveApiClient.DeleteListAsync(ip, location, type);
+        await this.NerveApiClient.DeleteListAsync(id);
 
         await this.LoadAsync();
     }

@@ -21,7 +21,7 @@ public static class ListEndpoints
     {
         app.MapGet("/api/lists", GetListsAsync);
         app.MapPost("/api/lists/refresh", RefreshListsAsync);
-        app.MapDelete("/api/lists/{ip}", DeleteListAsync);
+        app.MapDelete("/api/lists/{id}", DeleteListAsync);
         app.MapPost("/api/lists/{ip}", AddListAsync);
         app.MapPost("/api/lists/{ip}/{listId}/refresh", RefreshListAsync);
     }
@@ -84,15 +84,25 @@ public static class ListEndpoints
         return TypedResults.Ok();
     }
 
-    public static async Task<Results<Ok, BadRequest>> DeleteListAsync(
-        [FromRoute] string ip,
-        [FromQuery] string location,
+    public static async Task<Results<Ok, NotFound, BadRequest>> DeleteListAsync(
+        int id,
         NerveDbContext dbContext,
         CancellationToken cancellationToken)
     {
-        _ = await dbContext.Lists
-            .Where(b => b.Ip == ip && b.Location == location)
+        var list = await dbContext.Lists.FirstOrDefaultAsync(l => l.Id == id, cancellationToken);
+
+        if (list is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        _ = await dbContext.Domains
+            .Where(d => d.ListId == id)
             .ExecuteDeleteAsync(cancellationToken);
+
+        dbContext.Lists.Remove(list);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         return TypedResults.Ok();
     }

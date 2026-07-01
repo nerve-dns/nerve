@@ -85,11 +85,11 @@ public sealed class NerveApiClient
         await httpClient.PostAsync($"lists/{ip}/{listId}/refresh", content: null);
     }
 
-    public async Task DeleteListAsync(string ip, string location, ListType type)
+    public async Task DeleteListAsync(int id)
     {
         var httpClient = this.httpClientFactory.CreateClient(NerveApiHttpClientName);
         
-        await httpClient.DeleteAsync($"lists/{ip}?location={WebUtility.UrlEncode(location)}&type={type}");
+        await httpClient.DeleteAsync($"lists/{id}");
     }
 
     public async Task<DomainsDto?> GetDomainsAsync(string? searchDomain, int page = 1)
