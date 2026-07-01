@@ -13,7 +13,7 @@ using Nerve.Metrics;
 
 namespace Nerve.Dns.Server;
 
-public class UdpDnsServer : IDnsServer
+public sealed class UdpDnsServer : IDnsServer
 {
     private const int MaxDnsUdpDatagramSize = 512;
 
@@ -38,7 +38,15 @@ public class UdpDnsServer : IDnsServer
 
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
-        this.socket.Bind(this.ipEndPoint);
+        try
+        {
+            this.socket.Bind(this.ipEndPoint);
+        }
+        catch (Exception exception)
+        {
+            this.logger.LogCritical(exception, "Unable to bind to '{EndPoint}', UDP server not started", this.ipEndPoint);
+            return;
+        }
 
         var anyIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
