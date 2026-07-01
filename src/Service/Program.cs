@@ -8,6 +8,10 @@ using Nerve.Service.Domain;
 using Nerve.Service.Endpoints.Stats;
 using Nerve.Service.Endpoints.Queries;
 using Nerve.Service.Extensions;
+using Nerve.Service.Endpoints.Domains;
+using Nerve.Service.Endpoints;
+using Nerve.Service.Endpoints.Lists;
+using Nerve.Service.Endpoints.Resolvers;
 
 namespace Nerve.Service;
 
@@ -58,6 +62,10 @@ public static class Program
 
             webApplication.AddStatEndpoints();
             webApplication.AddQueryEndpoints();
+            webApplication.AddListEndpoints();
+            webApplication.AddDomainEndpoints();
+            webApplication.AddSystemEndpoints();
+            webApplication.AddResolverEndpoints();
 
             using (IServiceScope serviceScope = webApplication.Services.CreateScope())
             {

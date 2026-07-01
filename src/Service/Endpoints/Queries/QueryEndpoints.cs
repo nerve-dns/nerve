@@ -43,6 +43,6 @@ public static class QueryEndpoints
             .Take(MaxPerPage)
             .ToListAsync(cancellationToken);
 
-        return TypedResults.Ok<QueryDto[]>([.. queries.Select(query => new QueryDto(query.Id, query.Timestamp, query.Client, query.Type, query.Domain, query.ResponseCode, query.Duration, query.Status))]);
+        return TypedResults.Ok<QueryDto[]>([.. queries.Select(query => new QueryDto(query.Id, new DateTimeOffset(query.Timestamp).ToUnixTimeSeconds(), query.Client, query.Type, query.Domain, query.ResponseCode, query.Duration, query.Status))]);
     }
 }
