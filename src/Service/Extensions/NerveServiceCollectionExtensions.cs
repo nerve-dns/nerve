@@ -2,8 +2,10 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using System.Configuration;
 using System.Net;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -91,13 +93,35 @@ public static class NerveServiceCollectionExtensions
             serviceProvider =>
             {
                 var nerveOptions = serviceProvider.GetRequiredService<IOptions<NerveOptions>>();
-                var logger = serviceProvider.GetRequiredService<ILogger<NerveOptions>>();
+                var logger = serviceProvider.GetRequiredService<ILogger<IDnsServer>>();
+                var serviceScopeFactory = serviceProvider.GetRequiredService<IServiceScopeFactory>();
+                
+                using var scope = serviceScopeFactory.CreateScope();
+
+                var dbContext = scope.ServiceProvider.GetRequiredService<NerveDbContext>();
+
+                var resolvers = dbContext.Resolvers
+                    .AsNoTracking()
+                    .ToList();
+
+                if (resolvers.Count == 0)
+                {
+                    throw new ConfigurationErrorsException("At least one resolver is required");
+                }
+                
+                var firstForwarderProtocol = resolvers[0].Protocol;
+
+                if (resolvers.Any(r => r.Protocol != firstForwarderProtocol))
+                {
+                    throw new ConfigurationErrorsException("Currently all resolvers needs to have the same protocol");
+                }
 
                 IDnsClient dnsClient;
-                if (nerveOptions.Value.ForwarderMode == ForwarderMode.Udp)
+
+                if (firstForwarderProtocol == Domain.Resolvers.Protocol.Udp)
                 {
                     // TODO: Support other ports?
-                    IPEndPoint[] forwarders = [.. nerveOptions.Value.Forwarders.Select(ip => new IPEndPoint(IPAddress.Parse(ip), 53))];
+                    IPEndPoint[] forwarders = [.. resolvers.Select(r => new IPEndPoint(IPAddress.Parse(r.Endpoint), 53))];
                     IIpEndPointProvider ipEndPointProvider = forwarders.Length == 1
                         ? new SingleIpEndPointProvider(forwarders[0])
                         : new RoundRobinIpEndPointProvider(forwarders);
@@ -105,9 +129,9 @@ public static class NerveServiceCollectionExtensions
 
                     logger.LogInformation("Using UDP for DNS forwarder (DNS over UDP) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<IPEndPoint>)forwarders));
                 }
-                else if (nerveOptions.Value.ForwarderMode == ForwarderMode.Https)
+                else if (firstForwarderProtocol == Domain.Resolvers.Protocol.Https)
                 {
-                    Uri[] forwarders = [.. nerveOptions.Value.Forwarders.Select(ip => new Uri(ip))];
+                    Uri[] forwarders = [.. resolvers.Select(r => new Uri(r.Endpoint))];
 
                     IUriProvider uriProvider = forwarders.Length == 1
                         ? new SingleUriProvider(forwarders[0])
@@ -118,7 +142,7 @@ public static class NerveServiceCollectionExtensions
                 }
                 else
                 {
-                    dnsClient = new TlsDnsClient(nerveOptions.Value.Forwarders.First());
+                    dnsClient = new TlsDnsClient(resolvers[0].Endpoint);
 
                     logger.LogInformation("Using TLS for DNS forwarder (DNS over TLS) with forwarders '{Forwarders}'", string.Join(", ", (IEnumerable<string>)nerveOptions.Value.Forwarders));
                 }
