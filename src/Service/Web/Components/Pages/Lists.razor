@@ -1,0 +1,109 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@page "/lists"
+@rendermode InteractiveServer
+
+@using Nerve.Service.Endpoints.Lists.Models
+
+@inject NerveApiClient NerveApiClient
+
+<PageTitle>Lists | Nerve</PageTitle>
+
+@if (this.lists is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <input class="form-control mb-2" @bind="this.newListIp" />
+        <input class="form-control mb-2" @bind="this.newList" placeholder="Url or File path" />
+        <select class="form-select" @bind="this.newListType">
+            @foreach (var value in Enum.GetValues<ListType>())
+            {
+                <option value="@value">@value</option>
+            }
+        </select>
+        <button class="btn btn-primary mt-2" @onclick="() => this.AddListAsync(this.newListIp, this.newList, this.newListType)">Add</button>
+    </div>
+
+    @foreach (IGrouping<string, ListResponse> blocklistGroup in this.lists.GroupBy(b => b.Ip))
+    {
+        <p><b>List '@blocklistGroup.Key':</b></p>
+
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Domain Count</th>
+                    <th>Last Refreshed</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (ListResponse list in blocklistGroup)
+                {
+                    <tr>
+                        <td>@list.Location</td>
+                        <td>@list.Type</td>
+                        <td>@list.DomainCount.ToString("N0")</td>
+                        <td>@(list.LastRefreshed?.ToLocalTime().ToString("G") ?? "not yet")</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary" @onclick="@(() => this.RefreshListAsync(list.Ip, list.Id))">
+                                    Refresh
+                                </button>
+                                <button class="btn btn-sm btn-danger" @onclick="@(() => this.RemoveListAsync(list.Ip, list.Location, list.Type))">
+                                    Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+
+@code {
+    private string newListIp = "0.0.0.0";
+    private string? newList;
+    private ListType newListType;
+    private List<ListResponse>? lists;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        this.lists = await this.NerveApiClient.GetBlocklistsAsync();
+    }
+
+    private async Task AddListAsync(string ip, string list, ListType type)
+    {
+        await this.NerveApiClient.AddListAsync(ip, list, type);
+
+        await this.LoadAsync();
+    }
+
+    private async Task RefreshListAsync(string ip, int listId)
+    {
+        await this.NerveApiClient.RefreshListAsync(ip, listId);
+
+        await this.LoadAsync();
+    }
+
+    private async Task RemoveListAsync(string ip, string location, ListType type)
+    {
+        await this.NerveApiClient.DeleteListAsync(ip, location, type);
+
+        await this.LoadAsync();
+    }
+}

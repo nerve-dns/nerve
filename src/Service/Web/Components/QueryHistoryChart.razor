@@ -1,0 +1,47 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@inject IJSRuntime JS
+
+<canvas @ref="this.canvas" style="width:100%; height:300px;"></canvas>
+
+@code {
+    private ElementReference canvas;
+    private bool isFirstRendered;
+
+    [Parameter]
+    public string[] Labels { get; set; } = Array.Empty<string>();
+
+    [Parameter]
+    public double[] ValuesForwarded { get; set; } = Array.Empty<double>();
+
+    [Parameter]
+    public double[] ValuesCached { get; set; } = Array.Empty<double>();
+    
+    [Parameter]
+    public double[] ValuesBlocked { get; set; } = Array.Empty<double>();
+    
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            this.isFirstRendered = true;
+
+            await this.JS.InvokeVoidAsync("queryHistoryChart.create", this.canvas, this.Labels, this.ValuesForwarded, this.ValuesCached, this.ValuesBlocked, this.Title);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (this.isFirstRendered)
+        {
+            await this.JS.InvokeVoidAsync("queryHistoryChart.update", this.Labels, this.ValuesForwarded, this.ValuesCached, this.ValuesBlocked);
+        }
+    }
+}

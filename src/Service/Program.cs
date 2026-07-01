@@ -8,10 +8,15 @@ using Nerve.Service.Domain;
 using Nerve.Service.Endpoints.Stats;
 using Nerve.Service.Endpoints.Queries;
 using Nerve.Service.Extensions;
+using Nerve.Service.Web.Components;
+using Nerve.Service.Web;
 using Nerve.Service.Endpoints.Domains;
 using Nerve.Service.Endpoints;
 using Nerve.Service.Endpoints.Lists;
 using Nerve.Service.Endpoints.Resolvers;
+
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Nerve.Service;
 
@@ -56,7 +61,23 @@ public static class Program
 
             builder.Services.AddNerve(configuration);
 
+            builder.Services.AddSingleton<NerveApiClient>();
+
             builder.WebHost.UseUrls("http://*:8080");
+
+            builder.Services.AddRazorComponents()
+                .AddInteractiveServerComponents();
+
+            builder.Services.ConfigureHttpJsonOptions(options =>
+            {
+                options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+                options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            });
+
+            builder.Services.AddHttpClient(NerveApiClient.NerveApiHttpClientName, client =>
+            {
+                client.BaseAddress = new Uri("http://127.0.0.1:8080/api/");
+            });
 
             WebApplication webApplication = builder.Build();
 
@@ -66,6 +87,14 @@ public static class Program
             webApplication.AddDomainEndpoints();
             webApplication.AddSystemEndpoints();
             webApplication.AddResolverEndpoints();
+
+            webApplication.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
+            webApplication.UseAntiforgery();
+
+            webApplication.MapStaticAssets();
+            webApplication.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode();
 
             using (IServiceScope serviceScope = webApplication.Services.CreateScope())
             {

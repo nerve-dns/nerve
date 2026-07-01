@@ -1,0 +1,166 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@page "/domains"
+@rendermode InteractiveServer
+
+@using Nerve.Service.Endpoints.Domains.Models
+
+@inject NerveApiClient NerveApiClient
+
+<PageTitle>Domains | Nerve</PageTitle>
+
+<form class="d-flex gap-2 align-items-center" @onsubmit="this.SearchDomainAsync">
+    <input class="form-control" @bind="this.searchDomain" placeholder="Search domain..." />
+    <button class="btn btn-primary" type="submit">Search</button>
+</form>
+
+<button class="btn btn-primary" @onclick="() => this.addModalOpen = true">Add domain</button>
+
+<Modal @bind-Visible="@this.addModalOpen" Confirmed="this.AddDomain" Title="Add Domain">
+    <form class="d-flex gap-2 align-items-center" @onsubmit="this.SearchDomainAsync">
+        <input class="form-control" @bind="this.newDomainName" placeholder="Domain..." />
+        <select class="form-select" @bind="this.newDomainAction">
+            @foreach (var value in Enum.GetValues<DomainActionDto>())
+            {
+                <option value="@value">@value</option>
+            }
+        </select>
+    </form>
+</Modal>
+
+@if (this.domains is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped table-hover text-center align-middle">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Action</th>
+                <th>Source</th>
+                <th>Domain</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (DomainDto domain in this.domains.Domains)
+            {
+                <tr id="@domain.Id">
+                    <td>@domain.Id</td>
+                    <td>@domain.Action</td>
+                    <td>@domain.Source</td>
+                    <td>@domain.Value</td>
+                    <td>
+                        @if (domain.Source == DomainSourceDto.Manual)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="@(() => this.DeleteDomain(domain.Id))">
+                                Delete
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-center mt-3">
+        <nav aria-label="Pagination">
+            <ul class="pagination mb-0">
+                <li class="page-item @(currentPage == 1 ? "disabled" : null)">
+                    <button class="page-link"
+                            @onclick="() => this.SetPage(currentPage - 1)"
+                            disabled="@(currentPage == 1)">
+                        Previous
+                    </button>
+                </li>
+
+                @for (int p = Math.Max(1, this.currentPage - 2); p <= this.currentPage + 2; p++)
+                {
+                    <li class="page-item @(p == currentPage ? "active" : null)">
+                        <button class="page-link" @onclick="() => this.SetPage(p)">
+                            @p
+                        </button>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == this.domains.TotalDomains ? "disabled" : null)">
+                    <button class="page-link"
+                            @onclick="() => this.SetPage(currentPage + 1)"
+                            disabled="@(currentPage == this.domains.TotalDomains)">
+                        Next
+                    </button>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="text-end text-muted mt-2">
+            Page @currentPage of @((this.domains.TotalDomains / this.pageSize).ToString("N0")) (@this.domains.TotalDomains.ToString("N0") domains)
+        </div>
+    </div>
+}
+
+@code {
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    private string? newDomainName;
+    private DomainActionDto newDomainAction;
+    private bool addModalOpen;
+    private string? searchDomain;
+    private DomainsDto? domains;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        this.domains = await this.NerveApiClient.GetDomainsAsync(searchDomain: null);
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await this.SearchDomainAsync();
+        }
+    }
+
+    private async Task SearchDomainAsync()
+    {
+        this.domains = await this.NerveApiClient.GetDomainsAsync(this.searchDomain, this.currentPage);
+    }
+
+    private async Task AddDomain()
+    {
+        if (this.newDomainName is null)
+        {
+            return;
+        }
+
+        await this.NerveApiClient.AddDomainAsync(this.newDomainName, this.newDomainAction);
+
+        await this.LoadAsync();
+    }
+
+    private async Task DeleteDomain(int id)
+    {
+        await this.NerveApiClient.DeleteDomainAsync(id);
+
+        await this.LoadAsync();
+    }
+
+    private async Task SetPage(int page)
+    {
+        currentPage = page;
+
+        await this.SearchDomainAsync();
+    }
+}

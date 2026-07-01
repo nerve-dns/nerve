@@ -1,0 +1,79 @@
+﻿@rendermode InteractiveServer
+
+@inject NerveApiClient NerveApiClient;
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Nerve</a>
+        <button class="navbar-toggler @NavButtonCssClass" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-label="Toggle navigation" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse @NavBarCssClass" id="navbarCollapse" @onclick="ToggleNavMenu">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="oi oi-home" aria-hidden="true"></span> Dashboard
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="queries">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Queries
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="domains">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Domains
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="lists">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Blocklists / Allowlists
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="resolvers">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Resolvers
+                    </NavLink>
+                </li>
+            </ul>
+
+            <div class="d-flex gap-2 px-3 mt-2">
+                <button class="btn btn-outline-secondary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        @onclick="Restart">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Restart
+                </button>
+
+                <button class="btn btn-outline-primary flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                        @onclick="ReloadLists">
+                    <i class="bi bi-arrow-repeat"></i>
+                    Reload lists
+                </button>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    private bool collapseNavMenu = true;
+    
+    private string? NavBarCssClass => this.collapseNavMenu ? null : "show";
+    
+    private string? NavButtonCssClass => this.collapseNavMenu ? "collapsed" : null;
+
+    private void ToggleNavMenu()
+    {
+        this.collapseNavMenu = !this.collapseNavMenu;
+    }
+
+    private async Task Restart()
+    {
+        await this.NerveApiClient.RestartAsync();
+    }
+
+    private async Task ReloadLists()
+    {
+        await this.NerveApiClient.RefreshListsAsync();
+    }
+}

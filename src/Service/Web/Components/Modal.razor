@@ -1,0 +1,67 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@if (this.Visible)
+{
+    <div class="modal fade show" style="display:block" tabindex="-1" role="dialog" aria-modal="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="position: relative; z-index: 1060;">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button type="button" class="btn-close" aria-label="Close" @onclick="this.Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    @ChildContent
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="this.Close">Cancel</button>
+                    <button class="btn btn-primary" @onclick="this.Confirm">Confirm</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-backdrop fade show"
+             style="z-index: 1055;"
+             @onclick="this.Close">
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback Closed { get; set; }
+
+    [Parameter]
+    public EventCallback Confirmed { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+    
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private async Task Close()
+    {
+        await this.VisibleChanged.InvokeAsync(false);
+
+        await this.Closed.InvokeAsync();
+    }
+
+    private async Task Confirm()
+    {
+        await this.VisibleChanged.InvokeAsync(false);
+
+        await this.Confirmed.InvokeAsync();
+    }
+}

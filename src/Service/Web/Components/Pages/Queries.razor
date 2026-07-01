@@ -1,0 +1,103 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@page "/queries"
+@rendermode InteractiveServer
+
+@using Nerve.Service.Endpoints.Domains.Models;
+@using Nerve.Service.Endpoints.Queries.Models
+
+@inject NerveApiClient NerveApiClient
+
+@implements IDisposable
+
+<PageTitle>Queries | Nerve</PageTitle>
+
+<h1>Queries</h1>
+
+@if (this.queries is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Domain</th>
+                <th>ResponseCode</th>
+                <th>Duration (ms)</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (QueryDto query in this.queries)
+            {
+                <tr id="@query.Id">
+                    <td>@(DateTimeOffset.FromUnixTimeSeconds(query.Timestamp).ToLocalTime().ToString("G"))</td>
+                    <td>@query.Client</td>
+                    <td>@query.Type</td>
+                    <td>@query.Domain</td>
+                    <td>@query.ResponseCode</td>
+                    <td>@(Math.Round(query.Duration * 1000, digits: 2)) ms</td>
+                    <td>@query.Status</td>
+                    <td>
+                        @if (query.Status == Dns.Resolver.Status.Forwarded
+                            || query.Status == Dns.Resolver.Status.Cached)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => this.AddDomainAsync(query.Domain, DomainActionDto.Block)">
+                                Block
+                            </button>
+                        }
+                        else if (query.Status == Dns.Resolver.Status.Blocked)
+                        {
+                            <button class="btn btn-sm btn-danger" @onclick="() => this.AddDomainAsync(query.Domain, DomainActionDto.Allow)">
+                                Allow
+                            </button>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private PeriodicTimer? refreshTimer;
+    private QueryDto[]? queries;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.refreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        this.queries = await this.NerveApiClient.GetQueriesAsync();
+
+        _ = this.RefreshAsync();
+    }
+
+    private async Task RefreshAsync()
+    {
+        while (await this.refreshTimer!.WaitForNextTickAsync())
+        {
+            this.queries = await this.NerveApiClient.GetQueriesAsync();
+
+            await this.InvokeAsync(() => this.StateHasChanged());
+        }
+    }
+
+    private async Task AddDomainAsync(string domain, DomainActionDto domainActionDto)
+    {
+        await this.NerveApiClient.AddDomainAsync(domain, domainActionDto);
+    }
+
+    public void Dispose()
+    {
+        this.refreshTimer?.Dispose();
+    }
+}

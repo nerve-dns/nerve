@@ -1,0 +1,92 @@
+@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@page "/resolvers"
+@rendermode InteractiveServer
+
+@using Nerve.Service.Endpoints.Resolvers.Models
+
+@inject NerveApiClient NerveApiClient
+
+<PageTitle>Resolvers | Nerve</PageTitle>
+
+@if (this.resolvers is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div>
+        <input class="form-control mb-2" @bind="this.newResolverEndpoint" placeholder="IP / HTTPS URL / TLS DOMAIN" />
+        <select class="form-select" @bind="this.newResolverProtocol">
+            @foreach (var value in Enum.GetValues<ProtocolDto>())
+            {
+                <option value="@value">@value</option>
+            }
+        </select>
+        <button class="btn btn-primary mt-2" @onclick="() => this.AddResolverAsync(this.newResolverEndpoint, this.newResolverProtocol)">Add</button>
+    </div>
+
+    <table class="table table-striped mt-4">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Endpoint</th>
+                <th>Protocol</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (ResolverDto resolver in this.resolvers)
+            {
+                <tr>
+                    <td>@resolver.Id</td>
+                    <td>@resolver.Endpoint</td>
+                    <td>@resolver.Protocol</td>
+                    <td>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-danger" @onclick="@(() => this.DeleteResolverAsync(resolver.Id))">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private string? newResolverEndpoint;
+    private ProtocolDto newResolverProtocol;
+    private ResolverDto[]? resolvers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await this.LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var response = await this.NerveApiClient.GetResolversAsync();
+
+        this.resolvers = response?.Resolvers;;
+    }
+
+    private async Task AddResolverAsync(string endpoint, ProtocolDto protocolDto)
+    {
+        await this.NerveApiClient.AddResolverAsync(endpoint, protocolDto);
+
+        await this.LoadAsync();
+    }
+
+    private async Task DeleteResolverAsync(int id)
+    {
+        await this.NerveApiClient.DeleteResolverAsync(id);
+
+        await this.LoadAsync();
+    }
+}

@@ -1,0 +1,168 @@
+﻿@*
+SPDX-FileCopyrightText: 2023 - 2026 varelen and nerve contributors
+ 
+SPDX-License-Identifier: BSD-3-Clause
+*@
+
+@page "/"
+@rendermode InteractiveServer
+
+@inject NerveApiClient NerveApiClient;
+@implements IDisposable
+
+<PageTitle>Dashboard | Nerve</PageTitle>
+
+@if (this.stats is null || this.statsTop is null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <div class="container mt-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <SingleStatCard Title="Total Queries" 
+                        Value="@this.stats.TotalQueries" 
+                        IconClass="bi bi-clipboard-check" 
+                        ThemeColor="primary"
+                        ShowPerSecond="true" />
+            </div>
+
+            <div class="col-md-4">
+                <SingleStatCard Title="Total Queries Blocked" 
+                        Value="@this.stats.TotalQueriesBlocked" 
+                        IconClass="bi bi-ban" 
+                        ThemeColor="success"
+                        ShowPerSecond="true" />
+            </div>
+
+            <div class="col-md-4">
+                <SingleStatCard Title="Persantage Blocked" 
+                        Value="@(this.stats.PercentageBlocked)" 
+                        ValueUnit="%"
+                        IconClass="bi bi-percent" 
+                        ThemeColor="success" />
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <SingleStatCard Title="Total Allowlist Size" 
+                        Value="@this.stats.TotalAllowlistSize" 
+                        IconClass="bi bi-card-checklist" 
+                        ThemeColor="primary" />
+            </div>
+
+            <div class="col-md-4">
+                <SingleStatCard Title="Total Blocklist Size" 
+                        Value="@this.stats.TotalBlocklistSize" 
+                        IconClass="bi bi-card-list" 
+                        ThemeColor="primary" />
+            </div>
+
+            <div class="col-md-4">
+                <SingleStatCard Title="Average Duration (forwarded)" 
+                        Value="@((Math.Round(this.stats.AverageForwardingDuration * 1_000, digits: 2)))" 
+                        ValueUnit="ms"
+                        IconClass="bi bi-clock" 
+                        ThemeColor="primary" />
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-1">
+        <div class="row g-1">
+            <div class="col-md-6">
+                <p>Top (10) Blocked Domains:</p>
+
+                @foreach (DomainAndCountResponse r in this.statsTop.TopBlockedDomains)
+                {
+                    <div>
+                        <p>@r.Domain - @r.Count</p>
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <p>Top (10) Clients:</p>
+
+                @foreach (ClientAndCountResponse r in this.statsTop.TopClients)
+                {
+                    <div>
+                        <p>@r.Client - @r.Count</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div>        
+        <QueryHistoryChart Labels="this.labels" ValuesForwarded="this.valuesForwarded" ValuesCached="this.valuesCached" ValuesBlocked="this.valuesBlocked" Title="Total Queries (24 hours)" />
+    </div>
+}
+
+@code {
+    private string[] labels = [];
+    private double[] valuesForwarded = [];
+    private double[] valuesCached = [];
+    private double[] valuesBlocked = [];
+
+    private GetStatsResponse? stats;
+    private GetStatsTopResponse? statsTop;
+
+    private PeriodicTimer? periodicTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        this.periodicTimer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        this.stats = await this.NerveApiClient.GetStatsAsync();
+        this.statsTop = await this.NerveApiClient.GetStatsTopAsync();
+
+        var history = await this.NerveApiClient.GetStatsHistoryAsync();
+
+        if (history is not null)
+        {
+            this.labels = history.QueryHistory.Keys.Select(x => x.ToLocalTime().ToString("T")).ToArray();
+            this.valuesForwarded = history.QueryHistory.Values
+                .SelectMany(x => x)
+                .Where(x => x.Key == Dns.Resolver.Status.Forwarded)
+                .Select(x => (double)x.Value)
+                .ToArray();
+            this.valuesCached = history.QueryHistory.Values
+                .SelectMany(x => x)
+                .Where(x => x.Key == Dns.Resolver.Status.Blocked)
+                .Select(x => (double)x.Value)
+                .ToArray();
+            this.valuesBlocked = history.QueryHistory.Values
+                .SelectMany(x => x)
+                .Where(x => x.Key == Dns.Resolver.Status.Cached)
+                .Select(x => (double)x.Value)
+                .ToArray();
+        }
+
+        _ = Task.Run(() => this.RefreshAsync());
+    }
+
+    private async Task RefreshAsync()
+    {
+        try
+        {
+            while (await this.periodicTimer!.WaitForNextTickAsync())
+            {
+                this.stats = await this.NerveApiClient.GetStatsAsync();
+
+                await this.InvokeAsync(() => this.StateHasChanged());
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+    }
+
+    public void Dispose()
+    {
+        this.periodicTimer?.Dispose();
+    }
+}
+
