@@ -2,12 +2,16 @@
 // 
 // SPDX-License-Identifier: BSD-3-Clause
 
+using System.Net.Sockets;
+
 using Nerve.Dns.Server;
 
 namespace Nerve.Service;
 
 public sealed class NerveBackgroundService : BackgroundService
 {
+    private const int LINUX_SOCKET_ERROR_CODE_OPERATION_CANCELED = 125;
+
     private readonly ILogger<NerveBackgroundService> logger;
     private readonly IDnsServer dnsServer;
 
@@ -25,7 +29,11 @@ public sealed class NerveBackgroundService : BackgroundService
         {
             await this.dnsServer.StartAsync(cancellationToken);
         }
-        catch (TaskCanceledException)
+        catch (Exception exception) when (exception is TaskCanceledException or OperationCanceledException)
+        {
+            // Ignore
+        }
+        catch (Exception exception) when (exception is SocketException socketException && socketException.ErrorCode == LINUX_SOCKET_ERROR_CODE_OPERATION_CANCELED)
         {
             // Ignore
         }
