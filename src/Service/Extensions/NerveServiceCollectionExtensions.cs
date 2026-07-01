@@ -137,8 +137,10 @@ public static class NerveServiceCollectionExtensions
                     nerveMetrics);
             });
 
+        @this.AddSingleton<IListService, ListService>();
+
+        @this.AddHostedService<DatabaseListsHostedService>();
         @this.AddHostedService<NerveBackgroundService>();
-        @this.AddHostedService<ListsBackgroundService>();
 
         return @this;
     }
