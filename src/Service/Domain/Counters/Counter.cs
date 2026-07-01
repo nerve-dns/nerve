@@ -7,5 +7,6 @@ namespace Nerve.Service.Domain.Counters;
 public sealed class Counter
 {
     public int Id { get; set; }
+    
     public long Value { get; set; }
 }

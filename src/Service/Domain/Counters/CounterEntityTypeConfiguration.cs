@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Nerve.Service.Domain.Counters;
 
-public class CounterEntityTypeConfiguration : IEntityTypeConfiguration<Counter>
+public sealed class CounterEntityTypeConfiguration : IEntityTypeConfiguration<Counter>
 {
     public void Configure(EntityTypeBuilder<Counter> builder)
     {

@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Nerve.Service.Domain.Queries;
 
-public class QueryEntityTypeConfiguration : IEntityTypeConfiguration<Query>
+public sealed class QueryEntityTypeConfiguration : IEntityTypeConfiguration<Query>
 {
     public void Configure(EntityTypeBuilder<Query> builder)
     {
