@@ -25,7 +25,7 @@ public sealed class DatabaseQueryLogger : IQueryLogger
         this.nerveOptionsMonitor = nerveOptionsMonitor;
     }
 
-    public async Task LogAsync(long timestamp, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken)
+    public async Task LogAsync(DateTime timestampUtc, string client, Type type, string domain, ResponseCode responseCode, float duration, Status status, CancellationToken cancellationToken)
     {
         if (status == Status.Forwarded)
         {
@@ -33,22 +33,34 @@ public sealed class DatabaseQueryLogger : IQueryLogger
         }
         else
         {
-            CounterType counterType = status == Status.Cached ? CounterType.Cached : CounterType.Blocked;
+            CounterType counterType = status == Status.Cached
+                ? CounterType.Cached
+                : CounterType.Blocked;
+            
             await this.nerveDbContext.Database.ExecuteSqlInterpolatedAsync($"UPDATE Counters SET Value = Value + 1 WHERE Id = {CounterType.Queries}; UPDATE Counters SET Value = Value + 1 WHERE Id = {counterType};", cancellationToken);
         }
 
         PrivacyMode privacyMode = this.nerveOptionsMonitor.CurrentValue.PrivacyMode;
+        
         if (privacyMode == PrivacyMode.Anonymous)
         {
             return;
         }
 
+        var clientFinal = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideDomains
+            ? client
+            : "0.0.0.0";
+        
+        var domainFinal = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideClients
+            ? domain
+            : "hidden";
+
         this.nerveDbContext.Queries.Add(new Query
         {
-            Timestamp = timestamp,
-            Client = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideDomains ? client : "0.0.0.0",
+            Timestamp = timestampUtc,
+            Client = clientFinal,
             Type = type,
-            Domain = privacyMode == PrivacyMode.Everything || privacyMode == PrivacyMode.HideClients ? domain : "hidden",
+            Domain = domainFinal,
             ResponseCode = responseCode,
             Duration = duration,
             Status = status
