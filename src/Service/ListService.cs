@@ -196,7 +196,7 @@ public sealed partial class ListService : IListService
             httpClient.Timeout = HttpClientTimeout;
             // TODO: This should probably be somehow stream based but few hundred thousand lines are no problem
             string content = await httpClient.GetStringAsync(url, cancellationToken);
-            string[] lines = content.Split('\n');
+            string[] lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
             IEnumerable<(string ip, string hostname)> ipAndHostnames = lines.Where(line => !line.StartsWith(HostsCommentChar)).Select(ParseLine);
             foreach ((string ipParsed, string hostname) in ipAndHostnames)
             {
