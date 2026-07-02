@@ -34,20 +34,7 @@ public static class ListEndpoints
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        var listDomainCount = await dbContext.Domains
-            .AsNoTracking()
-            .Where(d => d.ListId != null)
-            .GroupBy(x => x.ListId)
-            .ToDictionaryAsync(x => x.Key!.Value, x => x.Count(), cancellationToken);
-
-        return TypedResults.Ok<ListResponse[]>([.. lists.Select(list =>
-        {
-            var domainCount = listDomainCount.TryGetValue(list.Id, out int value)
-                ? value
-                : 0;
-
-            return new ListResponse(list.Id, list.Ip, list.Location, (ListTypeModel)list.Type, list.LastRefreshed, domainCount);
-        })]);
+        return TypedResults.Ok<ListResponse[]>([.. lists.Select(static list => new ListResponse(list.Id, list.Ip, list.Location, (ListTypeModel)list.Type, list.LastRefreshed, list.DomainCount))]);
     }
 
     public static async Task<Results<Ok, BadRequest>> RefreshListsAsync(
@@ -76,7 +63,8 @@ public static class ListEndpoints
             Type = (ListTypeDomain)addBlocklistListRequest.Type,
             Ip = addBlocklistListRequest.Ip,
             Location = addBlocklistListRequest.Location,
-            LastRefreshed = null
+            LastRefreshed = null,
+            DomainCount = 0
         });
 
         await dbContext.SaveChangesAsync(cancellationToken);

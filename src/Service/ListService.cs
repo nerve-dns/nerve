@@ -60,17 +60,20 @@ public sealed partial class ListService : IListService
         {
             return;
         }
+        
+        int domainCount = 0;
 
         if (!list.Location.StartsWith(HttpListPrefix))
         {
-            await this.LoadFileBlocklistAsync(list.Ip, list.Location, allowlist: false, cancellationToken);
+            domainCount = await this.LoadFileBlocklistAsync(list.Ip, list.Location, allowlist: false, cancellationToken);
         }
 
         if (list.Location.StartsWith(HttpListPrefix))
         {
-            await this.LoadUrlBlocklistAsync(dbContext, list.Id, list.Ip, list.Location, allowlist: false, cancellationToken);
+            domainCount = await this.LoadUrlBlocklistAsync(dbContext, list.Id, list.Ip, list.Location, allowlist: false, cancellationToken);
         }
 
+        list.DomainCount = domainCount;
         list.LastRefreshed = DateTime.UtcNow;
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -101,17 +104,19 @@ public sealed partial class ListService : IListService
             foreach (var list in lists)
             {
                 bool allowlist = list.Type == Domain.Lists.ListType.Allowlist;
+                int domainCount = 0;
 
                 if (!list.Location.StartsWith(HttpListPrefix))
                 {
-                    await this.LoadFileBlocklistAsync(list.Ip, list.Location, allowlist, cancellationToken);
+                    domainCount = await this.LoadFileBlocklistAsync(list.Ip, list.Location, allowlist, cancellationToken);
                 }
 
                 if (list.Location.StartsWith(HttpListPrefix))
                 {
-                    await this.LoadUrlBlocklistAsync(dbContext, list.Id, list.Ip, list.Location, allowlist, cancellationToken);
+                    domainCount = await this.LoadUrlBlocklistAsync(dbContext, list.Id, list.Ip, list.Location, allowlist, cancellationToken);
                 }
 
+                list.DomainCount = domainCount;
                 list.LastRefreshed = DateTime.UtcNow;
             }
 
@@ -142,11 +147,11 @@ public sealed partial class ListService : IListService
         }
     }
 
-    private async Task LoadFileBlocklistAsync(string ip, string path, bool allowlist, CancellationToken cancellationToken)
+    private async Task<int> LoadFileBlocklistAsync(string ip, string path, bool allowlist, CancellationToken cancellationToken)
     {
-        var hostsAndIps = new Dictionary<string, string>();
+        var hostsAndIps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        if (hostsAndIps.Count == 0)
+        if (File.Exists(path))
         {
             using var streamReader = new StreamReader(path, Encoding.UTF8);
 
@@ -166,7 +171,7 @@ public sealed partial class ListService : IListService
         }
         else
         {
-            this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from cache for '{Path}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", path);
+            this.logger.LogInformation("File list at path '{Path}' does not exist", path);
         }
 
         if (allowlist)
@@ -177,13 +182,15 @@ public sealed partial class ListService : IListService
         {
             this.domainBlocklistService.Add(IPAddress.Parse(ip), hostsAndIps);
         }
+
+        return hostsAndIps.Count;
     }
 
-    private async Task LoadUrlBlocklistAsync(NerveDbContext dbContext, int listId, string ip, string url, bool allowlist, CancellationToken cancellationToken)
+    private async Task<int> LoadUrlBlocklistAsync(NerveDbContext dbContext, int listId, string ip, string url, bool allowlist, CancellationToken cancellationToken)
     {
         try
         {
-            var hostsAndIps = new Dictionary<string, string>();
+            var hostsAndIps = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             using var httpClient = new HttpClient();
             httpClient.Timeout = HttpClientTimeout;
@@ -196,13 +203,16 @@ public sealed partial class ListService : IListService
                 hostsAndIps[hostname] = ipParsed;
             }
 
-            this.logger.LogInformation("Loaded {Count:n0} {AllowedOrBlocked} domains from '{Url}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
-
             await this.AddDomains(dbContext, listId, ip, allowlist, hostsAndIps, cancellationToken);
+
+            this.logger.LogInformation("Loaded and added '{Count:n0}' {AllowedOrBlocked} domains from '{Url}'", hostsAndIps.Count, allowlist ? "allowed" : "blocked", url);
+
+            return hostsAndIps.Count;
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             this.logger.LogError(exception, "Error while loading list from {Url}", url);
+            return 0;
         }
     }
 

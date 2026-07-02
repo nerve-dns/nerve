@@ -14,5 +14,7 @@ public sealed class List
 
     public required string Location { get; init; }
 
+    public required int DomainCount { get; set; }
+
     public DateTime? LastRefreshed { get; set; }
 }

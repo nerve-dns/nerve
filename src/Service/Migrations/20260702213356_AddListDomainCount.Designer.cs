@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nerve.Service.Domain;
 
@@ -10,9 +11,11 @@ using Nerve.Service.Domain;
 namespace Nerve.Service.Migrations
 {
     [DbContext(typeof(NerveDbContext))]
-    partial class NerveDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260702213356_AddListDomainCount")]
+    partial class AddListDomainCount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.9");
