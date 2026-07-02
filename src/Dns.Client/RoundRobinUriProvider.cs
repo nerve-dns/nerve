@@ -7,6 +7,7 @@ namespace Nerve.Dns.Client;
 public sealed class RoundRobinUriProvider : IUriProvider
 {
     private readonly Uri[] uris;
+
     private int index;
 
     public RoundRobinUriProvider(Uri[] uris)
@@ -17,11 +18,17 @@ public sealed class RoundRobinUriProvider : IUriProvider
 
     public Uri Get()
     {
-        if (this.index == this.uris.Length)
+        int length = this.uris.Length;
+
+        int newIndex = Interlocked.Increment(ref this.index) - 1;
+        
+        int wrappedIndex = newIndex % length;
+        
+        if (wrappedIndex < 0)
         {
-            this.index = 0;
+            wrappedIndex += length;
         }
 
-        return this.uris[this.index++];
+        return this.uris[wrappedIndex];
     }
 }
