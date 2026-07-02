@@ -53,7 +53,7 @@ public sealed class CacheResolver : ResolverBase
                 : 300;
             this.memoryCache.Set(question, resolvedMessage, new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(lowestTtl),
+                AbsoluteExpiration = DateTimeOffset.UtcNow.AddSeconds(lowestTtl),
                 Size = 1
             });
         }
