@@ -25,7 +25,10 @@ public sealed class HttpsDnsClient : IDnsClient
         // TODO: What to do with this hardcoded resolver IP?
         this.udpDnsClient = new UdpDnsClient(IPAddress.Parse("1.1.1.1"));
         this.uriProvider = uriProvider;
-        this.httpClient = new HttpClient();
+        this.httpClient = new HttpClient()
+        {
+            Timeout = TimeSpan.FromSeconds(6)
+        };
         this.httpClient.DefaultRequestHeaders.Add("Accept", DnsMessageContentType);
         this.resolvedUrisCache = new ConcurrentDictionary<Uri, Uri>();
     }
@@ -57,7 +60,7 @@ public sealed class HttpsDnsClient : IDnsClient
                     AuthoritativeAnswer = false,
                     Truncation = false,
                     RecursionDesired = true,
-                    RecursionAvailable = true,
+                    RecursionAvailable = false,
                     Zero = false,
                     ResponseCode = ResponseCode.NoError
                 },
@@ -81,6 +84,7 @@ public sealed class HttpsDnsClient : IDnsClient
             byteArrayContent.Headers.ContentType = new MediaTypeHeaderValue(DnsMessageContentType);
 
             Uri originalUri = this.uriProvider.Get();
+
             if (!this.resolvedUrisCache.TryGetValue(originalUri, out Uri? resolvedUri))
             {
                 resolvedUri = await this.ResolveUriAsync(originalUri);
@@ -92,13 +96,15 @@ public sealed class HttpsDnsClient : IDnsClient
                 Method = HttpMethod.Post,
                 RequestUri = resolvedUri,
                 Content = byteArrayContent,
+                Version = new Version(2, 0),
+                VersionPolicy = HttpVersionPolicy.RequestVersionOrHigher,
                 Headers = {
                     { "Host", originalUri.Host }
-                },
-                Version = new Version(2, 0)
+                }
             };
 
-            HttpResponseMessage httpResponseMessage = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken);
+            using var httpResponseMessage = await this.httpClient.SendAsync(httpRequestMessage, cancellationToken);
+            
             httpResponseMessage.EnsureSuccessStatusCode();
 
             byte[] responseMessageBytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(cancellationToken);
