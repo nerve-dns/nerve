@@ -29,6 +29,8 @@ public class TlsDnsClient : IDnsClient
         { "unfiltered.joindns4.eu", IPAddress.Parse("86.54.11.100") },
         { "dns.adguard-dns.com", IPAddress.Parse("94.140.15.15") },
         { "unfiltered.adguard-dns.com", IPAddress.Parse("94.140.14.141") },
+        { "dot.sb", IPAddress.Parse("185.222.222.222") },
+        { "dns.mullvad.net", IPAddress.Parse("194.242.2.2") },
     }.ToFrozenDictionary();
 
     private readonly SemaphoreSlim semaphoreSlim = new(1, 1);
